@@ -1,0 +1,66 @@
+[
+  {
+    "filename": "resume1.pdf",
+    "filepath": "data/train\\resume1.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 1\nName: John Anderson\nEmail: john.anderson@email.com\nPhone: +1 555-123-4567\nExperience: Software Engineer, TechNova Solutions (2022–Present); Junior Developer,\nBrightCode Inc. (2020–2022)\nSkills: Python, Java, SQL, Git, Problem Solving\nEducation: B.Sc. Computer Science, University of California, 2020",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 324
+  },
+  {
+    "filename": "resume10.pdf",
+    "filepath": "data/train\\resume10.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 10\nName: Ava Thompson\nEmail: ava.thompson@email.com\nPhone: +1 555-012-3456\nExperience: Customer Success Manager (2022–Present); Customer Support Executive\n(2020–2022)\nSkills: CRM, Salesforce, Communication, Conflict Resolution, Team Collaboration\nEducation: Bachelor of Commerce, Boston University, 2020",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 326
+  },
+  {
+    "filename": "resume2.pdf",
+    "filepath": "data/train\\resume2.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 2\nName: Sarah Mitchell\nEmail: sarah.mitchell@email.com\nPhone: +1 555-234-5678\nExperience: Data Analyst, Insight Analytics (2021–Present); Data Intern (2020–2021)\nSkills: Excel, SQL, Power BI, Python, Data Visualization\nEducation: Bachelor of Business Analytics, Arizona State University, 2021",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 315
+  },
+  {
+    "filename": "resume3.pdf",
+    "filepath": "data/train\\resume3.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 3\nName: Michael Brown\nEmail: michael.brown@email.com\nPhone: +1 555-345-6789\nExperience: Network Engineer (2019–Present); IT Support Specialist (2017–2019)\nSkills: Networking, Cisco, Linux, Troubleshooting, Cybersecurity\nEducation: B.IT, University of Texas, 2017",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 285
+  },
+  {
+    "filename": "resume4.pdf",
+    "filepath": "data/train\\resume4.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 4\nName: Emily Carter\nEmail: emily.carter@email.com\nPhone: +1 555-456-7890\nExperience: HR Executive (2022–Present); HR Assistant (2020–2022)\nSkills: Recruitment, Employee Relations, MS Office, Communication, HRIS\nEducation: BBA, Florida State University, 2020",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 281
+  },
+  {
+    "filename": "resume5.pdf",
+    "filepath": "data/train\\resume5.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 5\nName: David Wilson\nEmail: david.wilson@email.com\nPhone: +1 555-567-8901\nExperience: Marketing Specialist (2021–Present); Marketing Coordinator (2019–2021)\nSkills: Digital Marketing, SEO, Google Analytics, Content Strategy, Social Media\nEducation: Bachelor of Marketing, Michigan State University, 2019",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 326
+  },
+  {
+    "filename": "resume6.pdf",
+    "filepath": "data/train\\resume6.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 6\nName: Olivia Harris\nEmail: olivia.harris@email.com\nPhone: +1 555-678-9012\nExperience: Financial Analyst (2021–Present); Finance Associate (2019–2021)\nSkills: Financial Modeling, Excel, Budgeting, Forecasting, SAP\nEducation: Bachelor of Finance, Ohio State University, 2019",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 297
+  },
+  {
+    "filename": "resume7.pdf",
+    "filepath": "data/train\\resume7.pdf",
+    "pages": 1,
+    "text": "--- PAGE 1 ---\nResume 7\nName: James Walker\nEmail: james.walker@email.com\nPhone: +1 555-789-0123\nExperience: Mechanical Engineer (2020–Present); Graduate Engineer (2018–2020)\nSkills: AutoCAD, SolidWorks, Manufacturing, Quality Control, Project Management\nEducation: B.E. Mechanical Engineering, Georgia Tech, 2018",
+    "extraction_date": "2026-07-05 13:41:13",
+    "text_length": 313
+  }
+]
