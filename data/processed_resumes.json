@@ -1,0 +1,294 @@
+[
+  {
+    "filename": "resume1.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 1\nName: John Anderson\nEmail: john.anderson@email.com\nPhone: +1 555-123-4567\nExperience: Software Engineer, TechNova Solutions (2022–Present); Junior Developer,\nBrightCode Inc. (2...",
+    "cleaned_text": "--- Page 1 --- Resume 1 Name John Anderson Email John.Anderson@Email.Com Phone 1 555-123-4567 Experience Software Engineer, Technova Solutions (2022Present) Junior Developer, Brightcode Inc. (20202022) Skills Python, Java, Sql, Git, Problem Solving Education B.Sc. Computer Science, University Of Cal...",
+    "entities": {
+      "emails": [
+        "John.Anderson@Email.Com"
+      ],
+      "phones": [
+        "555-123-4567"
+      ],
+      "names": [
+        "John Anderson Email John",
+        "Technova Solutions",
+        "Java"
+      ],
+      "companies": [
+        "Problem Solving",
+        "Skills Python",
+        "Computer Science, University Of California",
+        "Brightcode Inc."
+      ],
+      "dates": [
+        "2020",
+        "20202022"
+      ],
+      "locations": [],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "Python",
+        "Java",
+        "AI",
+        "SQL",
+        "Git"
+      ]
+    },
+    "quality_score": 1.0
+  },
+  {
+    "filename": "resume10.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 10\nName: Ava Thompson\nEmail: ava.thompson@email.com\nPhone: +1 555-012-3456\nExperience: Customer Success Manager (2022–Present); Customer Support Executive\n(2020–2022)\nSkills: CRM...",
+    "cleaned_text": "--- Page 1 --- Resume 10 Name Ava Thompson Email Ava.Thompson@Email.Com Phone 1 555-012-3456 Experience Customer Success Manager (2022Present) Customer Support Executive (20202022) Skills Crm, Salesforce, Communication, Conflict Resolution, Team Collaboration Education Bachelor Of Commerce, Boston U...",
+    "entities": {
+      "emails": [
+        "Ava.Thompson@Email.Com"
+      ],
+      "phones": [
+        "555-012-3456"
+      ],
+      "names": [
+        "Email Ava",
+        "Ava Thompson"
+      ],
+      "companies": [
+        "Customer Support Executive",
+        "Skills Crm, Salesforce, Communication, Conflict Resolution",
+        "Team Collaboration Education Bachelor Of Commerce",
+        "Boston University"
+      ],
+      "dates": [
+        "2020",
+        "20202022"
+      ],
+      "locations": [],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "AI"
+      ]
+    },
+    "quality_score": 1.0
+  },
+  {
+    "filename": "resume2.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 2\nName: Sarah Mitchell\nEmail: sarah.mitchell@email.com\nPhone: +1 555-234-5678\nExperience: Data Analyst, Insight Analytics (2021–Present); Data Intern (2020–2021)\nSkills: Excel, S...",
+    "cleaned_text": "--- Page 1 --- Resume 2 Name Sarah Mitchell Email Sarah.Mitchell@Email.Com Phone 1 555-234-5678 Experience Data Analyst, Insight Analytics (2021Present) Data Intern (20202021) Skills Excel, Sql, Power Bi, Python, Data Visualization Education Bachelor Of Business Analytics, Arizona State University, ...",
+    "entities": {
+      "emails": [
+        "Sarah.Mitchell@Email.Com"
+      ],
+      "phones": [
+        "555-234-5678"
+      ],
+      "names": [
+        "Email Sarah",
+        "Power Bi",
+        "Sarah Mitchell"
+      ],
+      "companies": [
+        "Arizona State University",
+        "Insight Analytics",
+        "Data Intern",
+        "Data Visualization Education Bachelor Of Business Analytics",
+        "Skills Excel"
+      ],
+      "dates": [
+        "2021",
+        "20202021"
+      ],
+      "locations": [],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "Python",
+        "AI",
+        "SQL"
+      ]
+    },
+    "quality_score": 1.0
+  },
+  {
+    "filename": "resume3.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 3\nName: Michael Brown\nEmail: michael.brown@email.com\nPhone: +1 555-345-6789\nExperience: Network Engineer (2019–Present); IT Support Specialist (2017–2019)\nSkills: Networking, Cis...",
+    "cleaned_text": "--- Page 1 --- Resume 3 Name Michael Brown Email Michael.Brown@Email.Com Phone 1 555-345-6789 Experience Network Engineer (2019Present) It Support Specialist (20172019) Skills Networking, Cisco, Linux, Troubleshooting, Cybersecurity Education B.It, University Of Texas, 2017",
+    "entities": {
+      "emails": [
+        "Michael.Brown@Email.Com"
+      ],
+      "phones": [
+        "555-345-6789"
+      ],
+      "names": [
+        "Email Michael",
+        "Michael Brown"
+      ],
+      "companies": [
+        "Cybersecurity Education B.It,",
+        "University Of Texas",
+        "Skills Networking"
+      ],
+      "dates": [
+        "2017",
+        "20172019"
+      ],
+      "locations": [
+        "Cisco",
+        "Linux",
+        "Troubleshooting"
+      ],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "AI",
+        "Linux"
+      ]
+    },
+    "quality_score": 1.0
+  },
+  {
+    "filename": "resume4.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 4\nName: Emily Carter\nEmail: emily.carter@email.com\nPhone: +1 555-456-7890\nExperience: HR Executive (2022–Present); HR Assistant (2020–2022)\nSkills: Recruitment, Employee Relation...",
+    "cleaned_text": "--- Page 1 --- Resume 4 Name Emily Carter Email Emily.Carter@Email.Com Phone 1 555-456-7890 Experience Hr Executive (2022Present) Hr Assistant (20202022) Skills Recruitment, Employee Relations, Ms Office, Communication, Hris Education Bba, Florida State University, 2020",
+    "entities": {
+      "emails": [
+        "Emily.Carter@Email.Com"
+      ],
+      "phones": [
+        "555-456-7890"
+      ],
+      "names": [],
+      "companies": [
+        "Skills Recruitment, Employee Relations",
+        "Florida State University",
+        "Hris Education Bba",
+        "Ms Office,"
+      ],
+      "dates": [
+        "2020",
+        "20202022"
+      ],
+      "locations": [],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "AI"
+      ]
+    },
+    "quality_score": 0.7
+  },
+  {
+    "filename": "resume5.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 5\nName: David Wilson\nEmail: david.wilson@email.com\nPhone: +1 555-567-8901\nExperience: Marketing Specialist (2021–Present); Marketing Coordinator (2019–2021)\nSkills: Digital Marke...",
+    "cleaned_text": "--- Page 1 --- Resume 5 Name David Wilson Email David.Wilson@Email.Com Phone 1 555-567-8901 Experience Marketing Specialist (2021Present) Marketing Coordinator (20192021) Skills Digital Marketing, Seo, Google Analytics, Content Strategy, Social Media Education Bachelor Of Marketing, Michigan State U...",
+    "entities": {
+      "emails": [
+        "David.Wilson@Email.Com"
+      ],
+      "phones": [
+        "555-567-8901"
+      ],
+      "names": [
+        "David Wilson",
+        "Wilson@Email",
+        "Email David"
+      ],
+      "companies": [
+        "Google Analytics",
+        "Michigan State University",
+        "Social Media Education Bachelor Of Marketing",
+        "Content Strategy",
+        "Skills Digital Marketing"
+      ],
+      "dates": [
+        "20192021",
+        "2019"
+      ],
+      "locations": [],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "Go",
+        "AI",
+        "Git"
+      ]
+    },
+    "quality_score": 1.0
+  },
+  {
+    "filename": "resume6.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 6\nName: Olivia Harris\nEmail: olivia.harris@email.com\nPhone: +1 555-678-9012\nExperience: Financial Analyst (2021–Present); Finance Associate (2019–2021)\nSkills: Financial Modeling...",
+    "cleaned_text": "--- Page 1 --- Resume 6 Name Olivia Harris Email Olivia.Harris@Email.Com Phone 1 555-678-9012 Experience Financial Analyst (2021Present) Finance Associate (20192021) Skills Financial Modeling, Excel, Budgeting, Forecasting, Sap Education Bachelor Of Finance, Ohio State University, 2019",
+    "entities": {
+      "emails": [
+        "Olivia.Harris@Email.Com"
+      ],
+      "phones": [
+        "555-678-9012"
+      ],
+      "names": [
+        "Olivia Harris"
+      ],
+      "companies": [
+        "Sap Education Bachelor Of Finance",
+        "Skills Financial Modeling",
+        "Ohio State University"
+      ],
+      "dates": [
+        "20192021",
+        "2019"
+      ],
+      "locations": [
+        "Email Olivia"
+      ],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "AI"
+      ]
+    },
+    "quality_score": 1.0
+  },
+  {
+    "filename": "resume7.pdf",
+    "original_text": "--- PAGE 1 ---\nResume 7\nName: James Walker\nEmail: james.walker@email.com\nPhone: +1 555-789-0123\nExperience: Mechanical Engineer (2020–Present); Graduate Engineer (2018–2020)\nSkills: AutoCAD, SolidWork...",
+    "cleaned_text": "--- Page 1 --- Resume 7 Name James Walker Email James.Walker@Email.Com Phone 1 555-789-0123 Experience Mechanical Engineer (2020Present) Graduate Engineer (20182020) Skills Autocad, Solidworks, Manufacturing, Quality Control, Project Management Education B.E. Mechanical Engineering, Georgia Tech, 20...",
+    "entities": {
+      "emails": [
+        "James.Walker@Email.Com"
+      ],
+      "phones": [
+        "555-789-0123"
+      ],
+      "names": [
+        "James Walker Email James",
+        "Graduate Engineer"
+      ],
+      "companies": [
+        "Georgia Tech",
+        "Skills Autocad, Solidworks, Manufacturing, Quality Control, Project Management Education B.E. Mechanical Engineering"
+      ],
+      "dates": [
+        "2018",
+        "20182020"
+      ],
+      "locations": [],
+      "years": [
+        "20"
+      ],
+      "skills": [
+        "AI"
+      ]
+    },
+    "quality_score": 1.0
+  }
+]
