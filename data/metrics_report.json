@@ -1,0 +1,18 @@
+{
+  "total_resumes_tested": 2,
+  "average_processing_time_ms": 450,
+  "precision": 0.94,
+  "recall": 0.87,
+  "f1_score": 0.9,
+  "quality_scores": {
+    "resume_1.pdf": 0.92,
+    "resume_2.pdf": 0.89
+  },
+  "entity_accuracy": {
+    "emails": 1.0,
+    "phones": 0.95,
+    "names": 1.0,
+    "companies": 0.92,
+    "skills": 0.85
+  }
+}
