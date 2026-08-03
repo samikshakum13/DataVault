@@ -322,4 +322,7 @@ if __name__ == "__main__":
     print("\n🚀 Launching Gradio app...")
     print("📍 Open: http://localhost:7860")
     print("Press Ctrl+C to stop\n")
-    
+
+# THIS RUNS ON IMPORT (for Railway)
+app = ResumeExtractorApp()
+demo = app.launch()
