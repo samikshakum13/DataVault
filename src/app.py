@@ -323,8 +323,3 @@ if __name__ == "__main__":
     print("📍 Open: http://localhost:7860")
     print("Press Ctrl+C to stop\n")
     
-   demo.launch(
-    server_name="0.0.0.0",
-    server_port=8000,
-    share=False
-)
