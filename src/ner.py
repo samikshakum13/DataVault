@@ -92,24 +92,24 @@ class ResumeNER:
         return filtered_orgs
 
 
-def extract_companies_keyword(self, text):
-    """Extract companies using keyword matching (internship, worked at, etc.)"""
-    import re
-    
-    companies = []
-    
-    # Pattern: "internship at Company" or "worked at Company"
-    patterns = [
-        r'internship\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
-        r'worked\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
-        r'experience\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
-    ]
-    
-    for pattern in patterns:
-        matches = re.findall(pattern, text, re.IGNORECASE)
-        companies.extend(matches)
-    
-    return [c.strip() for c in companies if c.strip()]
+    def extract_companies_keyword(self, text):
+        """Extract companies using keyword matching (internship, worked at, etc.)"""
+        import re
+        
+        companies = []
+        
+        # Pattern: "internship at Company" or "worked at Company"
+        patterns = [
+            r'internship\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
+            r'worked\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
+            r'experience\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            companies.extend(matches)
+        
+        return [c.strip() for c in companies if c.strip()]
     
     def extract_years(self, text):
         """
@@ -149,18 +149,15 @@ def extract_companies_keyword(self, text):
     
     def extract_all(self, text):
         """Extract all entities from resume."""
-        
-        entities = {
-            'names': self.extract_emails(text),  # existing
-            'emails': self.extract_emails(text),  # existing
-            'phones': self.extract_phones(text),  # existing
-            'companies': self.extract_companies_keyword(text),  # NEW: Use keyword-based
-            'locations': [ent.text for ent in self.nlp(text).ents if ent.label_ == "GPE"],
-            'skills': self.extract_skills(text),  # existing
-            'years': self.extract_years(text)  # existing
+        return {
+            'names': self.extract_entities_spacy(text),
+            'emails': self.extract_emails(text),
+            'phones': self.extract_phones(text),
+            'companies': self.extract_entities_spacy(text),  # Use spaCy ORG
+            'locations': self.extract_entities_spacy(text),  # Use spaCy GPE
+            'skills': self.extract_skills(text),
+            'years': self.extract_years(text)
         }
-        
-        return entities
 
 
 if __name__ == "__main__":
