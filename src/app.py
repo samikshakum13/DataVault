@@ -74,20 +74,68 @@ class ResumeExtractorApp:
             cleaned_text = self.cleaner.clean(text_extracted)
             print("✓ Cleaned text")
             
-            # Step 4: Extract entities
-            entities = self.ner.extract_all(cleaned_text)
-            print("✓ Extracted entities")
+         # IMPROVED: Better entity post-processing
+        import re
 
-            # Clean up entities - remove duplicates and long text
-            for key in entities:
-                if entities[key]:
-                    # Keep only unique items
-                    entities[key] = list(set(entities[key]))
-                    # Remove items longer than 50 characters (too verbose)
-                    entities[key] = [e for e in entities[key] if len(e) < 50]
-                    # Remove if it contains "Career" or "Engineering" (resume jargon)
-                    entities[key] = [e for e in entities[key] if 'career' not in e.lower() and 'objective' not in e.lower()]
-            
+        # 1. Better name extraction - look for capitalized words at START
+        lines = cleaned_text.split('\n')
+        names = []
+        for line in lines[:5]:  # Check first 5 lines (where name usually is)
+            line = line.strip()
+            if line and line[0].isupper():
+                words = line.split()
+                # Check if looks like a name (1-3 capitalized words)
+                if 1 <= len(words) <= 3 and all(w[0].isupper() for w in words if w):
+                    # Reject if it's all caps or looks like a title
+                    if not all(w.isupper() for w in words):
+                        names.append(line)
+                        break
+
+        if names:
+            entities['names'] = names
+
+        # 2. Remove duplicates
+        for key in entities:
+            if entities[key]:
+                entities[key] = list(set(entities[key]))
+
+        # 3. Remove wrong locations (skills misclassified as places)
+        bad_locations = ['sql', 'go', 'python', 'excel', 'power bi', 'pandas', 
+                        'numpy', 'matplotlib', 'r programming', 'java', 'c++',
+                        'javascript', 'html', 'css', 'react', 'node']
+        entities['locations'] = [
+            l for l in entities.get('locations', []) 
+            if l.lower() not in bad_locations and len(l) > 2
+        ]
+
+        # 4. Clean skills - remove single letters and too-short items
+        entities['skills'] = [
+            s for s in entities.get('skills', []) 
+            if len(s) > 2 and s.lower() not in ['sql', 'go', 'r', 'c']
+        ]
+
+        # 5. For companies/locations: Keep only short items (2-4 words max)
+        for key in ['companies', 'locations']:
+            if key in entities and entities[key]:
+                entities[key] = [
+                    e for e in entities[key] 
+                    if 1 <= len(e.split()) <= 4  # 1-4 word items
+                    and len(e) < 50  # Max 50 characters
+                    and not any(word in e.lower() for word in 
+                        ['career', 'objective', 'engineering', 'monitoring', 
+                        'export', 'data', 'project', 'system'])
+                ]
+                            
+                            # For companies/locations: Keep only short items (2-4 words max)
+                            if key in ['companies', 'locations']:
+                                entities[key] = [
+                                    e for e in entities[key] 
+                                    if 2 <= len(e.split()) <= 4  # Only 2-4 word items
+                                    and len(e) < 30  # Max 30 characters
+                                    and not any(word in e.lower() for word in 
+                                        ['career', 'objective', 'engineering', 'monitoring', 'export', 'data'])
+                                ]
+                        
             # Step 5: Calculate quality score
             quality_score = self.calculate_quality(entities)
             print(f"✓ Quality score: {quality_score:.1%}")
