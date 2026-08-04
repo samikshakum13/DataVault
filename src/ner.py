@@ -216,15 +216,36 @@ class ResumeNER:
         return found_skills
     
     def extract_all(self, text):
-        """Extract all entities from resume."""
+        """Extract all entities from resume using spaCy."""
+        doc = self.nlp(text)
+        
+        # Extract entities by type
+        names = []
+        locations = []
+        companies = []
+        
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                names.append(ent.text)
+            elif ent.label_ == "GPE":  # Geo-Political Entity (places)
+                locations.append(ent.text)
+            elif ent.label_ == "ORG":  # Organizations
+                companies.append(ent.text)
+        
+        # Get other entities
+        emails = self.extract_emails(text)
+        phones = self.extract_phones(text)
+        skills = self.extract_skills(text)
+        years = self.extract_years(text)
+        
         return {
-            'names': self.extract_names_regex(text),  # CHANGED: Use regex
-            'emails': self.extract_emails(text),
-            'phones': self.extract_phones(text),
-            'companies': self.extract_companies_regex(text),  # CHANGED: Use regex
-            'locations': self.extract_locations_regex(text),  # CHANGED: Use regex
-            'skills': self.extract_skills(text),
-            'years': self.extract_years(text)
+            'names': list(set(names)),  # Remove duplicates
+            'emails': list(set(emails)),
+            'phones': list(set(phones)),
+            'companies': list(set(companies)),
+            'locations': list(set(locations)),
+            'skills': list(set(skills)),
+            'years': list(set(years))
         }
 
 
