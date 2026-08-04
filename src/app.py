@@ -74,18 +74,21 @@ class ResumeExtractorApp:
             cleaned_text = self.cleaner.clean(text_extracted)
             print("✓ Cleaned text")
             
+            # Step 4: Extract entities
+            entities = self.ner.extract_all(cleaned_text)
+            print("✓ Extracted entities")
+            
             # IMPROVED: Better entity post-processing
             import re
+
             # 1. Better name extraction - look for capitalized words at START
             lines = cleaned_text.split('\n')
             names = []
-            for line in lines[:5]:  # Check first 5 lines (where name usually is)
+            for line in lines[:5]:  # Check first 5 lines
                 line = line.strip()
                 if line and line[0].isupper():
                     words = line.split()
-                    # Check if looks like a name (1-3 capitalized words)
                     if 1 <= len(words) <= 3 and all(w[0].isupper() for w in words if w):
-                        # Reject if it's all caps or looks like a title
                         if not all(w.isupper() for w in words):
                             names.append(line)
                             break
@@ -100,40 +103,43 @@ class ResumeExtractorApp:
 
             # 3. Remove wrong locations (skills misclassified as places)
             bad_locations = ['sql', 'go', 'python', 'excel', 'power bi', 'pandas', 
-                            'numpy', 'matplotlib', 'r programming', 'java', 'c++',
-                            'javascript', 'html', 'css', 'react', 'node']
+                            'numpy', 'matplotlib', 'r programming', 'java', 'c++']
             entities['locations'] = [
                 l for l in entities.get('locations', []) 
                 if l.lower() not in bad_locations and len(l) > 2
             ]
 
-            # 4. Clean skills - remove single letters and too-short items
+            # 4. Clean skills
             entities['skills'] = [
                 s for s in entities.get('skills', []) 
                 if len(s) > 2 and s.lower() not in ['sql', 'go', 'r', 'c']
             ]
 
-            # 5. For companies/locations: Keep only short items (2-4 words max)
+            # 5. Clean companies/locations
             for key in ['companies', 'locations']:
                 if key in entities and entities[key]:
                     entities[key] = [
                         e for e in entities[key] 
-                        if 1 <= len(e.split()) <= 4  # 1-4 word items
-                        and len(e) < 50  # Max 50 characters
+                        if 1 <= len(e.split()) <= 4 and len(e) < 50
                         and not any(word in e.lower() for word in 
-                            ['career', 'objective', 'engineering', 'monitoring', 
-                            'export', 'data', 'project', 'system'])
+                            ['career', 'objective', 'engineering', 'monitoring', 'export', 'data'])
                     ]
-                        
-            # For companies/locations: Keep only short items (2-4 words max)
-            if key in ['companies', 'locations']:
-                    entities[key] = [
-                        e for e in entities[key] 
-                        if 2 <= len(e.split()) <= 4  # Only 2-4 word items
-                        and len(e) < 30  # Max 30 characters
-                        and not any(word in e.lower() for word in 
+
+            # Clean up entities - remove duplicates and long text
+            for key in entities:
+                if entities[key]:
+                    # Remove duplicates
+                    entities[key] = list(set(entities[key]))
+                    
+                    # For companies/locations: Keep only short items (2-4 words max)
+                    if key in ['companies', 'locations']:
+                        entities[key] = [
+                            e for e in entities[key] 
+                            if 2 <= len(e.split()) <= 4  # Only 2-4 word items
+                            and len(e) < 30  # Max 30 characters
+                            and not any(word in e.lower() for word in 
                                 ['career', 'objective', 'engineering', 'monitoring', 'export', 'data'])
-                            ]
+                        ]
                         
             # Step 5: Calculate quality score
             quality_score = self.calculate_quality(entities)
@@ -153,12 +159,12 @@ class ResumeExtractorApp:
             json_result = json.dumps(result, indent=2)
             
             return "✅ Success!", html_result, json_result
-            
+        
         except Exception as e:
             error_msg = f"❌ Error: {str(e)}"
             print(error_msg)
-        return error_msg, "", None
-        
+            return error_msg, "", None
+    
     def calculate_quality(self, entities):
         """
         Score the quality of extraction (0-1 scale).
