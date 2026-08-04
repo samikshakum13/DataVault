@@ -68,28 +68,28 @@ class ResumeNER:
         
         return list(set(phones))  # Remove duplicates
     
-   def extract_entities_spacy(self, text):
-    """Extract organizations using spaCy NER with better filtering."""
-    doc = self.nlp(text)
-    
-    # Get raw ORG entities
-    raw_orgs = [ent.text for ent in doc.ents if ent.label_ == "ORG"]
-    
-    # Filter out common non-company terms
-    exclude_keywords = [
-        'college', 'university', 'school', 'institute',
-        'tensorflow', 'scikit', 'python', 'sql', 'framework',
-        'library', 'tool', 'workshop', 'course', 'program',
-        'system', 'platform', 'application', 'project'
-    ]
-    
-    # Filter companies
-    filtered_orgs = [
-        org for org in raw_orgs 
-        if not any(keyword.lower() in org.lower() for keyword in exclude_keywords)
-    ]
-    
-    return filtered_orgs
+    def extract_entities_spacy(self, text):
+        """Extract organizations using spaCy NER with better filtering."""
+        doc = self.nlp(text)
+        
+        # Get raw ORG entities
+        raw_orgs = [ent.text for ent in doc.ents if ent.label_ == "ORG"]
+        
+        # Filter out common non-company terms
+        exclude_keywords = [
+            'college', 'university', 'school', 'institute',
+            'tensorflow', 'scikit', 'python', 'sql', 'framework',
+            'library', 'tool', 'workshop', 'course', 'program',
+            'system', 'platform', 'application', 'project'
+        ]
+        
+        # Filter companies
+        filtered_orgs = [
+            org for org in raw_orgs 
+            if not any(keyword.lower() in org.lower() for keyword in exclude_keywords)
+        ]
+        
+        return filtered_orgs
 
 
 def extract_companies_keyword(self, text):
@@ -148,19 +148,19 @@ def extract_companies_keyword(self, text):
         return found_skills
     
     def extract_all(self, text):
-    """Extract all entities from resume."""
-    
-    entities = {
-        'names': self.extract_emails(text),  # existing
-        'emails': self.extract_emails(text),  # existing
-        'phones': self.extract_phones(text),  # existing
-        'companies': self.extract_companies_keyword(text),  # NEW: Use keyword-based
-        'locations': [ent.text for ent in self.nlp(text).ents if ent.label_ == "GPE"],
-        'skills': self.extract_skills(text),  # existing
-        'years': self.extract_years(text)  # existing
-    }
-    
-    return entities
+        """Extract all entities from resume."""
+        
+        entities = {
+            'names': self.extract_emails(text),  # existing
+            'emails': self.extract_emails(text),  # existing
+            'phones': self.extract_phones(text),  # existing
+            'companies': self.extract_companies_keyword(text),  # NEW: Use keyword-based
+            'locations': [ent.text for ent in self.nlp(text).ents if ent.label_ == "GPE"],
+            'skills': self.extract_skills(text),  # existing
+            'years': self.extract_years(text)  # existing
+        }
+        
+        return entities
 
 
 if __name__ == "__main__":
