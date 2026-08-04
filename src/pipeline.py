@@ -8,8 +8,8 @@ Purpose: End-to-end processing of all training data
 import json
 import os
 from pathlib import Path
-from clean import TextCleaner
-from ner import ResumeNER
+from src.clean import TextCleaner
+from src.ner import ResumeNER
 from difflib import SequenceMatcher
 
 class DataPipeline:

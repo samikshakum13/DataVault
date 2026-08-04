@@ -68,34 +68,48 @@ class ResumeNER:
         
         return list(set(phones))  # Remove duplicates
     
-    def extract_entities_spacy(self, text):
-        """
-        Extract entities using spaCy NER.
-        
-        Entity types:
-        - PERSON: Names
-        - ORG: Companies/Organizations
-        - DATE: Dates
-        - GPE: Locations (Geo-Political Entity)
-        """
-        doc = self.nlp(text)
-        
-        entities = {
-            "PERSON": [],
-            "ORG": [],
-            "DATE": [],
-            "GPE": []
-        }
-        
-        for ent in doc.ents:
-            if ent.label_ in entities:
-                entities[ent.label_].append(ent.text)
-        
-        # Remove duplicates
-        for key in entities:
-            entities[key] = list(set(entities[key]))
-        
-        return entities
+   def extract_entities_spacy(self, text):
+    """Extract organizations using spaCy NER with better filtering."""
+    doc = self.nlp(text)
+    
+    # Get raw ORG entities
+    raw_orgs = [ent.text for ent in doc.ents if ent.label_ == "ORG"]
+    
+    # Filter out common non-company terms
+    exclude_keywords = [
+        'college', 'university', 'school', 'institute',
+        'tensorflow', 'scikit', 'python', 'sql', 'framework',
+        'library', 'tool', 'workshop', 'course', 'program',
+        'system', 'platform', 'application', 'project'
+    ]
+    
+    # Filter companies
+    filtered_orgs = [
+        org for org in raw_orgs 
+        if not any(keyword.lower() in org.lower() for keyword in exclude_keywords)
+    ]
+    
+    return filtered_orgs
+
+
+def extract_companies_keyword(self, text):
+    """Extract companies using keyword matching (internship, worked at, etc.)"""
+    import re
+    
+    companies = []
+    
+    # Pattern: "internship at Company" or "worked at Company"
+    patterns = [
+        r'internship\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
+        r'worked\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
+        r'experience\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        companies.extend(matches)
+    
+    return [c.strip() for c in companies if c.strip()]
     
     def extract_years(self, text):
         """
@@ -134,46 +148,19 @@ class ResumeNER:
         return found_skills
     
     def extract_all(self, text):
-        """
-        Extract all entities from resume text.
-        
-        Returns:
-            Dictionary with all extracted data
-        """
-        print("\n🔍 Extracting entities...")
-        
-        # Extract various entity types
-        emails = self.extract_emails(text)
-        print(f"   ✓ Found {len(emails)} email(s)")
-        
-        phones = self.extract_phones(text)
-        print(f"   ✓ Found {len(phones)} phone(s)")
-        
-        spacy_entities = self.extract_entities_spacy(text)
-        print(f"   ✓ Found {len(spacy_entities['PERSON'])} person(s)")
-        print(f"   ✓ Found {len(spacy_entities['ORG'])} organization(s)")
-        print(f"   ✓ Found {len(spacy_entities['DATE'])} date(s)")
-        print(f"   ✓ Found {len(spacy_entities['GPE'])} location(s)")
-        
-        years = self.extract_years(text)
-        print(f"   ✓ Found {len(years)} year(s)")
-        
-        skills = self.extract_skills(text)
-        print(f"   ✓ Found {len(skills)} skill(s)")
-        
-        # Combine all results
-        result = {
-            "emails": emails,
-            "phones": phones,
-            "names": spacy_entities['PERSON'],
-            "companies": spacy_entities['ORG'],
-            "dates": spacy_entities['DATE'],
-            "locations": spacy_entities['GPE'],
-            "years": years,
-            "skills": skills
-        }
-        
-        return result
+    """Extract all entities from resume."""
+    
+    entities = {
+        'names': self.extract_emails(text),  # existing
+        'emails': self.extract_emails(text),  # existing
+        'phones': self.extract_phones(text),  # existing
+        'companies': self.extract_companies_keyword(text),  # NEW: Use keyword-based
+        'locations': [ent.text for ent in self.nlp(text).ents if ent.label_ == "GPE"],
+        'skills': self.extract_skills(text),  # existing
+        'years': self.extract_years(text)  # existing
+    }
+    
+    return entities
 
 
 if __name__ == "__main__":
