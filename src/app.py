@@ -16,6 +16,7 @@ from clean import TextCleaner
 from ner import ResumeNER
 from pipeline import DataPipeline
 
+
 class ResumeExtractorApp:
     """
     Gradio app wrapper for the resume extraction pipeline.
@@ -309,20 +310,34 @@ class ResumeExtractorApp:
         return demo
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point."""
     print("="*60)
     print("DataVault - Resume Extraction Web App")
     print("="*60)
     
-    # Create app
     app = ResumeExtractorApp()
     demo = app.launch()
     
-    # Launch locally (http://localhost:7860)
     print("\n🚀 Launching Gradio app...")
     print("📍 Open: http://localhost:7860")
     print("Press Ctrl+C to stop\n")
+    
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 7860)),
+        share=False
+    )
+
+if __name__ == "__main__":
+    main()
 
 # THIS RUNS ON IMPORT (for Railway)
-app = ResumeExtractorApp()
-demo = app.launch()
+if True:  # Always run this for production
+    app = ResumeExtractorApp()
+    demo = app.launch()
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 7860)),
+        share=False
+    )
