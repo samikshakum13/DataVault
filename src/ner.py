@@ -216,64 +216,61 @@ class ResumeNER:
         return found_skills
 
     def extract_all(self, text):
-        """Extract all entities from resume using spaCy."""
-        doc = self.nlp(text)
-
-        exclude_words = {
-            "matplotlib",
-            "power bi",
-            "numpy",
-            "pandas",
-            "python",
-            "sql",
-            "excel",
-            "java",
-            "c++",
-            "javascript",
-            "react",
-            "node",
-            "fresher",
-            "motivated",
-            "quick learner",
-            "team player",
-            "analytical",
-            "thinking",
-            "knowledge",
-            "professional",
-            "summary",
-            "skills",
-            "experience",
-            "education",
-        }
-
-        # Extract entities by type
+        """Extract all entities - hybrid approach (regex + spaCy)."""
+        
+        # 1. NAMES: Extract from first line (where resumes put the name)
+        lines = text.split('\n')
         names = []
-        locations = []
-        companies = []
-
-        for ent in doc.ents:
-            if ent.label_ == "PERSON":
-                if ent.text.lower() not in exclude_words and len(ent.text.split()) <= 3:
-                    names.append(ent.text)
-            elif ent.label_ == "GPE":  # Geo-Political Entity (places)
-                locations.append(ent.text)
-            elif ent.label_ == "ORG":  # Organizations
-                companies.append(ent.text)
-
-        # Get other entities
+        for line in lines[:3]:  # Check first 3 lines
+            line = line.strip()
+            # Look for capitalized words that look like names (not skills/keywords)
+            if line and len(line) < 50:
+                words = line.split()
+                # If 1-3 capitalized words and no lowercase after first word = likely name
+                if 2 <= len(words) <= 3:
+                    if all(w[0].isupper() for w in words):
+                        # Skip if it's clearly not a name
+                        if not any(skip in line.lower() for skip in 
+                            ['resume', 'cv', 'profile', 'summary', 'objective', 'fresher']):
+                            names.append(line)
+                            break
+        
+        # 2. EMAILS: Use regex (most reliable)
         emails = self.extract_emails(text)
+        
+        # 3. PHONES: Use regex (most reliable)
         phones = self.extract_phones(text)
+        
+        # 4. COMPANIES: Use spaCy ORG + filter
+        doc = self.nlp(text)
+        companies = [
+            ent.text for ent in doc.ents 
+            if ent.label_ == "ORG" 
+            and len(ent.text) < 50
+            and not any(skip in ent.text.lower() for skip in 
+                ['university', 'college', 'school', 'institute'])
+        ]
+        
+        # 5. LOCATIONS: Use spaCy GPE
+        locations = [
+            ent.text for ent in doc.ents 
+            if ent.label_ == "GPE"
+        ]
+        
+        # 6. SKILLS: Use existing method
         skills = self.extract_skills(text)
+        
+        # 7. YEARS: Use existing method
         years = self.extract_years(text)
-
+        
         return {
-            'names': list(set(names)),  # Remove duplicates
-            'emails': list(set(emails)),
-            'phones': list(set(phones)),
-            'companies': list(set(companies)),
-            'locations': list(set(locations)),
-            'skills': list(set(skills)),
-            'years': list(set(years))
+            'names': list(set(names)) if names else [],
+            'emails': list(set(emails)) if emails else [],
+            'phones': list(set(phones)) if phones else [],
+            'companies': list(set(companies)) if companies else [],
+            'locations': list(set(locations)) if locations else [],
+            'skills': list(set(skills)) if skills else [],
+            'years': list(set(years)) if years else []
         }
 
 
