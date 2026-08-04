@@ -77,6 +77,16 @@ class ResumeExtractorApp:
             # Step 4: Extract entities
             entities = self.ner.extract_all(cleaned_text)
             print("✓ Extracted entities")
+
+            # Clean up entities - remove duplicates and long text
+            for key in entities:
+                if entities[key]:
+                    # Keep only unique items
+                    entities[key] = list(set(entities[key]))
+                    # Remove items longer than 50 characters (too verbose)
+                    entities[key] = [e for e in entities[key] if len(e) < 50]
+                    # Remove if it contains "Career" or "Engineering" (resume jargon)
+                    entities[key] = [e for e in entities[key] if 'career' not in e.lower() and 'objective' not in e.lower()]
             
             # Step 5: Calculate quality score
             quality_score = self.calculate_quality(entities)
