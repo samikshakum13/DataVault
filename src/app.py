@@ -12,8 +12,7 @@ import os
 from pathlib import Path
 
 # Import our pipeline modules
-from clean import TextCleaner
-from ner import ResumeNER
+from resume_parser import ResumeParserWrapper
 from pipeline import DataPipeline
 
 
@@ -27,144 +26,49 @@ class ResumeExtractorApp:
     - Deploy to Hugging Face Spaces for free
     - Mobile-friendly
     """
-    
+
     def __init__(self):
         """Initialize the pipeline."""
-        self.cleaner = TextCleaner()
-        self.ner = ResumeNER()
+        self.parser = ResumeParserWrapper()
         print("✓ App initialized: Pipeline ready")
-    
+
     def extract_from_pdf(self, pdf_file):
-        """
-        Process a single PDF file and extract resume data.
-        
-        Args:
-            pdf_file: Uploaded PDF file (Gradio returns a file path)
-        
-        Returns:
-            Tuple of (status, results_html, json_download)
-        """
+        """Process PDF and extract resume data using pyresparser."""
         
         try:
-            # Step 1: Check if file exists
             if pdf_file is None:
                 return "❌ Please upload a PDF file", "", None
             
             print(f"\n📄 Processing: {pdf_file}")
             
-            # Step 2: Extract text using pdfplumber
-            import pdfplumber
+            # Use pyresparser for extraction
+            entities = self.parser.extract_from_pdf(pdf_file)
             
-            text_extracted = ""
-            page_count = 0
+            print("✓ Extracted resume data")
             
-            with pdfplumber.open(pdf_file) as pdf:
-                page_count = len(pdf.pages)
-                for page in pdf.pages:
-                    extracted_page = page.extract_text()
-                    if extracted_page:
-                        text_extracted += extracted_page + "\n"
-            
-            if not text_extracted:
-                return "❌ Could not extract text from PDF", "", None
-            
-            print(f"✓ Extracted text from {page_count} page(s)")
-            
-            # Step 3: Clean text
-            cleaned_text = self.cleaner.clean(text_extracted)
-            print("✓ Cleaned text")
-            
-            # Step 4: Extract entities
-            entities = self.ner.extract_all(cleaned_text)
-            print("✓ Extracted entities")
-            
-            # IMPROVED: Better entity post-processing
-            import re
-
-            # 1. Better name extraction - look for capitalized words at START
-            lines = cleaned_text.split('\n')
-            names = []
-            for line in lines[:5]:  # Check first 5 lines
-                line = line.strip()
-                if line and line[0].isupper():
-                    words = line.split()
-                    if 1 <= len(words) <= 3 and all(w[0].isupper() for w in words if w):
-                        if not all(w.isupper() for w in words):
-                            names.append(line)
-                            break
-
-            if names:
-                entities['names'] = names
-
-            # 2. Remove duplicates
-            for key in entities:
-                if entities[key]:
-                    entities[key] = list(set(entities[key]))
-
-            # 3. Remove wrong locations (skills misclassified as places)
-            bad_locations = ['sql', 'go', 'python', 'excel', 'power bi', 'pandas', 
-                            'numpy', 'matplotlib', 'r programming', 'java', 'c++']
-            entities['locations'] = [
-                l for l in entities.get('locations', []) 
-                if l.lower() not in bad_locations and len(l) > 2
-            ]
-
-            # 4. Clean skills
-            entities['skills'] = [
-                s for s in entities.get('skills', []) 
-                if len(s) > 2 and s.lower() not in ['sql', 'go', 'r', 'c']
-            ]
-
-            # 5. Clean companies/locations
-            for key in ['companies', 'locations']:
-                if key in entities and entities[key]:
-                    entities[key] = [
-                        e for e in entities[key] 
-                        if 1 <= len(e.split()) <= 4 and len(e) < 50
-                        and not any(word in e.lower() for word in 
-                            ['career', 'objective', 'engineering', 'monitoring', 'export', 'data'])
-                    ]
-
-            # Clean up entities - remove duplicates and long text
-            for key in entities:
-                if entities[key]:
-                    # Remove duplicates
-                    entities[key] = list(set(entities[key]))
-                    
-                    # For companies/locations: Keep only short items (2-4 words max)
-                    if key in ['companies', 'locations']:
-                        entities[key] = [
-                            e for e in entities[key] 
-                            if 2 <= len(e.split()) <= 4  # Only 2-4 word items
-                            and len(e) < 30  # Max 30 characters
-                            and not any(word in e.lower() for word in 
-                                ['career', 'objective', 'engineering', 'monitoring', 'export', 'data'])
-                        ]
-                        
-            # Step 5: Calculate quality score
+            # Calculate quality score
             quality_score = self.calculate_quality(entities)
             print(f"✓ Quality score: {quality_score:.1%}")
             
-            # Step 6: Create results
+            # Create results
             result = {
                 "status": "success",
-                "filename": Path(pdf_file).name,
-                "pages": page_count,
+                "filename": pdf_file.split('/')[-1] if '/' in pdf_file else pdf_file,
+                "pages": 1,
                 "quality_score": quality_score,
                 "entities": entities
             }
             
-            # Step 7: Format for display
+            # Format for display
             html_result = self.format_html(result)
             json_result = json.dumps(result, indent=2)
             
             return "✅ Success!", html_result, json_result
-        
+    
         except Exception as e:
             error_msg = f"❌ Error: {str(e)}"
             print(error_msg)
             return error_msg, "", None
-    
     def calculate_quality(self, entities):
         """
         Score the quality of extraction (0-1 scale).
@@ -176,7 +80,7 @@ class ResumeExtractorApp:
         - Skills (20%)
         """
         score = 0.0
-        
+
         if entities.get('names'):
             score += 0.3
         if entities.get('emails'):
@@ -185,9 +89,9 @@ class ResumeExtractorApp:
             score += 0.2
         if entities.get('skills'):
             score += 0.2
-        
+
         return min(score, 1.0)
-    
+
     def format_html(self, result):
         """
         Format extraction results as HTML for display.
@@ -197,10 +101,10 @@ class ResumeExtractorApp:
         - Easy to read
         - Color-coded for different entity types
         """
-        
+
         entities = result.get('entities', {})
         quality = result.get('quality_score', 0)
-        
+
         # Determine quality color
         if quality >= 0.85:
             quality_color = "#10b981"  # green
@@ -208,7 +112,7 @@ class ResumeExtractorApp:
             quality_color = "#f59e0b"  # amber
         else:
             quality_color = "#ef4444"  # red
-        
+
         html = f"""
         <div style="font-family: sans-serif; padding: 20px; background: #f9fafb; border-radius: 8px;">
             
@@ -285,19 +189,19 @@ class ResumeExtractorApp:
             
         </div>
         """
-        
+
         return html
-    
+
     def launch(self):
         """
         Launch the Gradio web interface.
         
         This creates a beautiful, responsive web app.
         """
-        
+
         # Create Gradio interface
         with gr.Blocks(title="DataVault - Resume Extractor") as demo:
-            
+
             # Header
             gr.Markdown("""
             # 📄 DataVault Resume Extractor
@@ -310,7 +214,7 @@ class ResumeExtractorApp:
             - Skills and education
             - Locations and work dates
             """)
-            
+
             # Main content
             with gr.Row():
                 with gr.Column(scale=1):
@@ -320,14 +224,14 @@ class ResumeExtractorApp:
                         file_types=[".pdf"],
                         file_count="single"
                     )
-                    
+
                     # Processing button
                     extract_btn = gr.Button(
                         "🚀 Extract Data",
                         variant="primary",
                         size="lg"
                     )
-                
+
                 with gr.Column(scale=1):
                     # Output: Status
                     status_output = gr.Textbox(
@@ -335,13 +239,13 @@ class ResumeExtractorApp:
                         interactive=False,
                         lines=1
                     )
-            
+
             # Results display
             results_output = gr.HTML(
                 label="📊 Results",
                 value="<p style='color: #9ca3af;'>Upload a PDF and click Extract to see results...</p>"
             )
-            
+
             # JSON download
             json_output = gr.Textbox(
                 label="📋 JSON (for downloading/processing)",
@@ -349,14 +253,14 @@ class ResumeExtractorApp:
                 lines=10,
                 visible=False
             )
-            
+
             # Connect button to processing function
             extract_btn.click(
                 fn=self.extract_from_pdf,
                 inputs=[pdf_input],
                 outputs=[status_output, results_output, json_output]
             )
-            
+
             # Footer
             gr.Markdown("""
             ---
@@ -369,7 +273,7 @@ class ResumeExtractorApp:
             
             **Built with:** pdfplumber, spaCy, Gradio
             """)
-        
+
         return demo
 
 

@@ -7,3 +7,4 @@ uvicorn
 gradio
 pytest
 requests
+pyresparser>=1.0.1
