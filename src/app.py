@@ -9,10 +9,12 @@ import gradio as gr
 import json
 import tempfile
 import os
+import pdfplumber
 from pathlib import Path
 
 # Import our pipeline modules
-from resume_parser import ResumeParserWrapper
+from clean import TextCleaner
+from ner import ResumeNER
 from pipeline import DataPipeline
 
 
@@ -29,11 +31,12 @@ class ResumeExtractorApp:
 
     def __init__(self):
         """Initialize the pipeline."""
-        self.parser = ResumeParserWrapper()
+        self.cleaner = TextCleaner()
+        self.ner = ResumeNER()
         print("✓ App initialized: Pipeline ready")
 
     def extract_from_pdf(self, pdf_file):
-        """Process PDF and extract resume data using pyresparser."""
+        """Process a single PDF file and extract resume data."""
         
         try:
             if pdf_file is None:
@@ -41,10 +44,42 @@ class ResumeExtractorApp:
             
             print(f"\n📄 Processing: {pdf_file}")
             
-            # Use pyresparser for extraction
-            entities = self.parser.extract_from_pdf(pdf_file)
+            # Extract text using pdfplumber
+            text_extracted = ""
+            page_count = 0
             
-            print("✓ Extracted resume data")
+            with pdfplumber.open(pdf_file) as pdf:
+                page_count = len(pdf.pages)
+                for page in pdf.pages:
+                    extracted_page = page.extract_text()
+                    if extracted_page:
+                        text_extracted += extracted_page + "\n"
+            
+            if not text_extracted:
+                return "❌ Could not extract text from PDF", "", None
+            
+            print(f"✓ Extracted text from {page_count} page(s)")
+            
+            # Clean text
+            cleaned_text = self.cleaner.clean(text_extracted)
+            print("✓ Cleaned text")
+            
+            # Extract entities using NEW HYBRID NER
+            entities = self.ner.extract_all(cleaned_text)
+            print("✓ Extracted entities")
+            
+            # Post-processing cleanup
+            # Remove duplicates
+            for key in entities:
+                if entities[key]:
+                    entities[key] = list(set(entities[key]))
+            
+            # Remove very short skills (< 3 chars)
+            entities['skills'] = [s for s in entities.get('skills', []) if len(s) > 2]
+            
+            # Clean locations - remove if it's a skill
+            bad_locations = ['sql', 'go', 'python', 'java', 'c++', 'r']
+            entities['locations'] = [l for l in entities.get('locations', []) if l.lower() not in bad_locations]
             
             # Calculate quality score
             quality_score = self.calculate_quality(entities)
@@ -54,7 +89,7 @@ class ResumeExtractorApp:
             result = {
                 "status": "success",
                 "filename": pdf_file.split('/')[-1] if '/' in pdf_file else pdf_file,
-                "pages": 1,
+                "pages": page_count,
                 "quality_score": quality_score,
                 "entities": entities
             }
@@ -64,7 +99,7 @@ class ResumeExtractorApp:
             json_result = json.dumps(result, indent=2)
             
             return "✅ Success!", html_result, json_result
-    
+        
         except Exception as e:
             error_msg = f"❌ Error: {str(e)}"
             print(error_msg)
