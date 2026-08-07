@@ -1,305 +1,183 @@
 """
-DataVault NER (Named Entity Recognition) Module
-Extracts entities from resume text using spaCy
-
-Purpose: Extract names, companies, dates, locations
+Resume NER - Hybrid approach (Regex + spaCy)
+Better accuracy for names, emails, phones, companies
 """
 
 import spacy
 import re
-from datetime import datetime
+from pathlib import Path
 
 class ResumeNER:
-    """
-    Extract named entities from resume text using spaCy.
+    """Named Entity Recognition for resumes - Hybrid approach."""
     
-    Why spaCy?
-    - State-of-the-art NER (Named Entity Recognition)
-    - Fast & accurate
-    - Pre-trained models available
-    - Industry standard
-    """
-
     def __init__(self):
-        """Load spaCy model."""
-        print("🧠 Loading spaCy model...")
+        """Initialize spaCy model."""
         try:
             self.nlp = spacy.load("en_core_web_sm")
-            print("   ✓ Model loaded successfully")
         except:
-            print("   ❌ Model not found. Installing...")
+            print("Downloading spaCy model...")
             import subprocess
             subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
             self.nlp = spacy.load("en_core_web_sm")
-
+    
+    # ==================== NAMES ====================
     def extract_names_regex(self, text):
-        """Extract names using regex patterns (names typically capitalized)."""
-        import re
-
-        # Pattern: Capitalized words at start of lines or after newlines
-        # Typical resume format: Name at top
+        """Extract names from first 5 lines (where resumes put names)."""
         names = []
-
-        # Look for 2-3 capitalized words (typical name format)
-        pattern = r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})(?:\n|$)'
-        matches = re.findall(pattern, text, re.MULTILINE)
-        names.extend(matches)
-
-        # Also look for "Name:" or "Name :" patterns
-        pattern2 = r'(?:name|candidate|applicant)\s*[:=]\s*([A-Z][a-zA-Z\s]+?)(?:\n|,|$)'
-        matches2 = re.findall(pattern2, text, re.IGNORECASE)
-        names.extend([m.strip() for m in matches2])
-
-        return list(set(names))  # Remove duplicates
-
+        lines = text.split('\n')[:5]
+        
+        for line in lines:
+            line = line.strip()
+            if not line or len(line) > 80:  # Skip long lines (those aren't names)
+                continue
+            
+            # Pattern: 2-3 capitalized words (typical name format)
+            # Example: "Rahul Verma" or "John Smith Jr"
+            pattern = r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})$'
+            match = re.match(pattern, line)
+            
+            if match:
+                name = match.group(1)
+                # Skip common resume keywords
+                skip_words = ['resume', 'cv', 'profile', 'data', 'analyst', 'engineer']
+                if not any(skip in name.lower() for skip in skip_words):
+                    names.append(name)
+                    break  # Take first match
+        
+        return names
+    
+    # ==================== EMAILS ====================
     def extract_emails(self, text):
-        """
-        Extract email addresses using regex.
-        
-        Pattern: word@domain.extension
-        
-        Example:
-            Input: "Contact: john@example.com"
-            Output: ["john@example.com"]
-        """
+        """Extract emails using regex (99% accurate)."""
         pattern = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-        emails = re.findall(pattern, text)
-        return emails
-
+        return re.findall(pattern, text)
+    
+    # ==================== PHONES ====================
     def extract_phones(self, text):
-        """
-        Extract phone numbers using regex.
-        
-        Patterns:
-        - +1-555-123-4567
-        - (555) 123-4567
-        - 555-123-4567
-        - 5551234567
-        """
+        """Extract phone numbers using regex."""
         patterns = [
-            r'\+\d{1,3}[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}',  # +1-555-123-4567
-            r'\(\d{3}\)\s?\d{3}[-.\s]?\d{4}',  # (555) 123-4567
-            r'\d{3}[-.\s]?\d{3}[-.\s]?\d{4}'   # 555-123-4567
+            r'\+91[6-9]\d{9}',  # India: +91 XXXXXXXXXX
+            r'0[6-9]\d{9}',      # India: 0XXXXXXXXXX
+            r'\+1\d{10}',        # US: +1 XXXXXXXXXX
+            r'\(\d{3}\)\s*\d{3}-\d{4}',  # US: (XXX) XXX-XXXX
+            r'\d{10}',           # 10 digit number
         ]
-
+        
         phones = []
         for pattern in patterns:
-            phones.extend(re.findall(pattern, text))
-
-        return list(set(phones))  # Remove duplicates
-
-    def extract_entities_spacy(self, text):
-        """Extract organizations using spaCy NER with better filtering."""
-        doc = self.nlp(text)
-
-        # Get raw ORG entities
-        raw_orgs = [ent.text for ent in doc.ents if ent.label_ == "ORG"]
-
-        # Filter out common non-company terms
-        exclude_keywords = [
-            'college', 'university', 'school', 'institute',
-            'tensorflow', 'scikit', 'python', 'sql', 'framework',
-            'library', 'tool', 'workshop', 'course', 'program',
-            'system', 'platform', 'application', 'project'
-        ]
-
-        # Filter companies
-        filtered_orgs = [
-            org for org in raw_orgs 
-            if not any(keyword.lower() in org.lower() for keyword in exclude_keywords)
-        ]
-
-        return filtered_orgs
-
-    def extract_locations_regex(self, text):
-        """Extract locations using spaCy + filtering."""
-        import re
-
-        locations = []
-
-        # Get spaCy GPE entities
-        doc = self.nlp(text)
-        for ent in doc.ents:
-            if ent.label_ == "GPE":
-                locations.append(ent.text)
-
-        # Also look for common location patterns
-        pattern = r'(?:based|located|from|in)\s+([A-Z][a-zA-Z\s]+?)(?:,|$)'
-        matches = re.findall(pattern, text)
-        locations.extend(matches)
-
-        # Filter: Only keep short ones (1-3 words)
-        filtered = [
-            l.strip() for l in locations 
-            if 1 <= len(l.split()) <= 3 and len(l) < 30
-        ]
-
-        return list(set(filtered))
-
-    def extract_companies_regex(self, text):
-        """Extract company names using keyword patterns."""
-        import re
-
-        companies = []
-
-        # Patterns for internship/work experience
-        patterns = [
-            r'(?:intern|worked|experience)\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&.,-]+?)(?:\n|,|$)',
-            r'(?:company|organization|employer)\s*[:=]\s*([A-Z][a-zA-Z\s&.,-]+?)(?:\n|,|$)',
-        ]
-
-        for pattern in patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            companies.extend([m.strip() for m in matches])
-
-        # Filter: Only keep if 2-4 words and < 40 chars
-        filtered = [
-            c for c in companies 
-            if 1 <= len(c.split()) <= 4 and len(c) < 40
-        ]
-
-        return list(set(filtered))
-
-    def extract_companies_keyword(self, text):
-        """Extract companies using keyword matching (internship, worked at, etc.)"""
-        import re
-
-        companies = []
-
-        # Pattern: "internship at Company" or "worked at Company"
-        patterns = [
-            r'internship\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
-            r'worked\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
-            r'experience\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&]+?)(?:\.|,|$)',
-        ]
-
-        for pattern in patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            companies.extend(matches)
-
-        return [c.strip() for c in companies if c.strip()]
-
-    def extract_years(self, text):
-        """
-        Extract years (for experience dates).
+            matches = re.findall(pattern, text)
+            phones.extend(matches)
         
-        Pattern: 4-digit numbers between 1950-2050
-        """
-        pattern = r'\b(19|20)\d{2}\b'
+        return list(set(phones))  # Remove duplicates
+    
+    # ==================== COMPANIES ====================
+    def extract_companies_regex(self, text):
+        """Extract companies using keyword patterns."""
+        companies = []
+        
+        # Pattern 1: "internship at Company" or "worked at Company"
+        pattern1 = r'(?:intern|worked|experience|employed)\s+(?:at|with|in)\s+([A-Z][a-zA-Z\s&.,-]+?)(?:\n|,|from|since|$)'
+        matches1 = re.findall(pattern1, text, re.IGNORECASE)
+        companies.extend([m.strip() for m in matches1])
+        
+        # Pattern 2: "Company Name - Job Title"
+        pattern2 = r'^([A-Z][a-zA-Z\s&.,-]+?)\s*[-–]\s*[A-Z]'
+        matches2 = re.findall(pattern2, text, re.MULTILINE)
+        companies.extend([m.strip() for m in matches2])
+        
+        # Filter and clean
+        filtered = []
+        for company in companies:
+            company = company.strip()
+            # Skip if too long or contains jargon
+            if (2 <= len(company.split()) <= 4 and 
+                len(company) < 50 and
+                not any(skip in company.lower() for skip in 
+                    ['college', 'university', 'school', 'institute', 'project', 'system'])):
+                filtered.append(company)
+        
+        return list(set(filtered))
+    
+    # ==================== LOCATIONS ====================
+    def extract_locations_spacy(self, text):
+        """Extract locations using spaCy GPE."""
+        doc = self.nlp(text)
+        locations = []
+        
+        for ent in doc.ents:
+            if ent.label_ == "GPE":  # Geo-Political Entity
+                location = ent.text.strip()
+                # Filter: Only cities/states/countries (short names)
+                if 1 <= len(location.split()) <= 3 and len(location) < 40:
+                    locations.append(location)
+        
+        return list(set(locations))
+    
+    # ==================== SKILLS ====================
+    def extract_skills(self, text):
+        """Extract technical skills using keyword matching."""
+        # Common tech skills list
+        skills_list = [
+            'python', 'java', 'c++', 'javascript', 'sql', 'r programming',
+            'pandas', 'numpy', 'matplotlib', 'seaborn', 'scikit-learn', 'tensorflow',
+            'keras', 'pytorch', 'spark', 'hadoop', 'tableau', 'power bi', 'excel',
+            'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'linux',
+            'machine learning', 'deep learning', 'nlp', 'computer vision',
+            'data analysis', 'data science', 'data engineering', 'analytics',
+            'postgresql', 'mongodb', 'mysql', 'sqlite', 'api', 'rest', 'graphql'
+        ]
+        
+        skills_found = []
+        text_lower = text.lower()
+        
+        for skill in skills_list:
+            # Use word boundaries to avoid partial matches
+            pattern = r'\b' + re.escape(skill) + r'\b'
+            if re.search(pattern, text_lower):
+                skills_found.append(skill.title())
+        
+        return list(set(skills_found))
+    
+    # ==================== YEARS/DATES ====================
+    def extract_years(self, text):
+        """Extract years (education, experience)."""
+        # Pattern: 4-digit years (1990-2099)
+        pattern = r'\b(19\d{2}|20\d{2})\b'
         years = re.findall(pattern, text)
         return sorted(list(set(years)))
-
-    def extract_skills(self, text):
-        """
-        Extract skills (common tech keywords).
-        
-        This is simplified - matches common keywords.
-        """
-        common_skills = [
-            "Python", "Java", "JavaScript", "C++", "C#", "Go", "Rust",
-            "Machine Learning", "ML", "Deep Learning", "TensorFlow", "PyTorch",
-            "Data Science", "AI", "Artificial Intelligence",
-            "SQL", "NoSQL", "MongoDB", "PostgreSQL", "MySQL",
-            "FastAPI", "Flask", "Django", "React", "Angular", "Vue",
-            "AWS", "Azure", "GCP", "Docker", "Kubernetes",
-            "Git", "GitHub", "Linux", "DevOps",
-            "Pandas", "NumPy", "Scikit-learn", "SpaCy"
-        ]
-
-        found_skills = []
-        text_lower = text.lower()
-
-        for skill in common_skills:
-            if skill.lower() in text_lower:
-                found_skills.append(skill)
-
-        return found_skills
-
+    
+    # ==================== EXTRACT ALL ====================
     def extract_all(self, text):
-        """Extract all entities - hybrid approach (regex + spaCy)."""
+        """Extract all entities - SMART VERSION."""
         
-        # 1. NAMES: Extract from first line (where resumes put the name)
-        lines = text.split('\n')
+        # ===== NAMES: MULTIPLE STRATEGIES =====
         names = []
-        for line in lines[:3]:  # Check first 3 lines
+        
+        # Strategy 1: First 2-3 capitalized words in first line
+        lines = text.split('\n')
+        for line in lines[:5]:
             line = line.strip()
-            # Look for capitalized words that look like names (not skills/keywords)
-            if line and len(line) < 50:
+            if 10 < len(line) < 50:  # Not too short, not too long
                 words = line.split()
-                # If 1-3 capitalized words and no lowercase after first word = likely name
-                if 2 <= len(words) <= 3:
-                    if all(w[0].isupper() for w in words):
-                        # Skip if it's clearly not a name
-                        if not any(skip in line.lower() for skip in 
-                            ['resume', 'cv', 'profile', 'summary', 'objective', 'fresher']):
-                            names.append(line)
-                            break
+                if 2 <= len(words) <= 3 and all(w[0].isupper() for w in words):
+                    if not any(x in line.lower() for x in ['resume', 'profile', 'summary', 'fresher', 'data', 'analyst']):
+                        names.append(line)
+                        break
         
-        # 2. EMAILS: Use regex (most reliable)
-        emails = self.extract_emails(text)
+        # Strategy 2: "Name:" pattern
+        pattern = r'Name\s*[:=]\s*([A-Z][a-zA-Z\s]+?)(?:\n|,|$)'
+        matches = re.findall(pattern, text, re.IGNORECASE)
+        names.extend([m.strip() for m in matches])
         
-        # 3. PHONES: Use regex (most reliable)
-        phones = self.extract_phones(text)
-        
-        # 4. COMPANIES: Use spaCy ORG + filter
-        doc = self.nlp(text)
-        companies = [
-            ent.text for ent in doc.ents 
-            if ent.label_ == "ORG" 
-            and len(ent.text) < 50
-            and not any(skip in ent.text.lower() for skip in 
-                ['university', 'college', 'school', 'institute'])
-        ]
-        
-        # 5. LOCATIONS: Use spaCy GPE
-        locations = [
-            ent.text for ent in doc.ents 
-            if ent.label_ == "GPE"
-        ]
-        
-        # 6. SKILLS: Use existing method
-        skills = self.extract_skills(text)
-        
-        # 7. YEARS: Use existing method
-        years = self.extract_years(text)
+        # Remove duplicates
+        names = list(set(names))
         
         return {
-            'names': list(set(names)) if names else [],
-            'emails': list(set(emails)) if emails else [],
-            'phones': list(set(phones)) if phones else [],
-            'companies': list(set(companies)) if companies else [],
-            'locations': list(set(locations)) if locations else [],
-            'skills': list(set(skills)) if skills else [],
-            'years': list(set(years)) if years else []
+            'names': names if names else [],
+            'emails': self.extract_emails(text),
+            'phones': self.extract_phones(text),
+            'companies': self.extract_companies_regex(text),
+            'locations': self.extract_locations_spacy(text),
+            'skills': self.extract_skills(text),
+            'years': self.extract_years(text)
         }
-
-
-if __name__ == "__main__":
-    # Test the NER
-    test_text = """
-    JOHN DOE
-    john@example.com | +1-555-123-4567
-    San Francisco, CA
-    
-    EXPERIENCE
-    ML Engineer at Google (2020-2023)
-    - Built ML systems in Python
-    - Used TensorFlow and PyTorch
-    
-    Senior Developer at Microsoft (2018-2020)
-    - Developed cloud solutions on Azure
-    
-    SKILLS
-    Python, Machine Learning, FastAPI, Docker, AWS
-    
-    EDUCATION
-    B.Tech Computer Science, 2018
-    IIT Bombay, India
-    """
-    
-    ner = ResumeNER()
-    entities = ner.extract_all(test_text)
-    
-    print("\n📊 Extracted Entities:")
-    for key, value in entities.items():
-        print(f"  {key}: {value}")

@@ -33,77 +33,55 @@ class ResumeExtractorApp:
         """Initialize the pipeline."""
         self.cleaner = TextCleaner()
         self.ner = ResumeNER()
-        print("✓ App initialized: Pipeline ready")
+        print("✓ App initialized")
 
     def extract_from_pdf(self, pdf_file):
-        """Process a single PDF file and extract resume data."""
-        
+        """Extract resume data."""
         try:
             if pdf_file is None:
-                return "❌ Please upload a PDF file", "", None
+                return "❌ Upload a PDF", "", None
             
             print(f"\n📄 Processing: {pdf_file}")
             
-            # Extract text using pdfplumber
+            # Extract text
             text_extracted = ""
-            page_count = 0
-            
             with pdfplumber.open(pdf_file) as pdf:
-                page_count = len(pdf.pages)
                 for page in pdf.pages:
-                    extracted_page = page.extract_text()
-                    if extracted_page:
-                        text_extracted += extracted_page + "\n"
+                    text = page.extract_text()
+                    if text:
+                        text_extracted += text + "\n"
             
             if not text_extracted:
-                return "❌ Could not extract text from PDF", "", None
+                return "❌ Could not extract text", "", None
             
-            print(f"✓ Extracted text from {page_count} page(s)")
-            
-            # Clean text
+            # Clean
             cleaned_text = self.cleaner.clean(text_extracted)
-            print("✓ Cleaned text")
             
-            # Extract entities using NEW HYBRID NER
+            # Extract using NEW smart NER
             entities = self.ner.extract_all(cleaned_text)
-            print("✓ Extracted entities")
             
-            # Post-processing cleanup
-            # Remove duplicates
+            # Post-process
             for key in entities:
                 if entities[key]:
                     entities[key] = list(set(entities[key]))
             
-            # Remove very short skills (< 3 chars)
-            entities['skills'] = [s for s in entities.get('skills', []) if len(s) > 2]
-            
-            # Clean locations - remove if it's a skill
-            bad_locations = ['sql', 'go', 'python', 'java', 'c++', 'r']
-            entities['locations'] = [l for l in entities.get('locations', []) if l.lower() not in bad_locations]
-            
-            # Calculate quality score
+            # Quality score
             quality_score = self.calculate_quality(entities)
-            print(f"✓ Quality score: {quality_score:.1%}")
             
-            # Create results
             result = {
                 "status": "success",
                 "filename": pdf_file.split('/')[-1] if '/' in pdf_file else pdf_file,
-                "pages": page_count,
                 "quality_score": quality_score,
                 "entities": entities
             }
             
-            # Format for display
             html_result = self.format_html(result)
             json_result = json.dumps(result, indent=2)
             
             return "✅ Success!", html_result, json_result
         
         except Exception as e:
-            error_msg = f"❌ Error: {str(e)}"
-            print(error_msg)
-            return error_msg, "", None
+            return f"❌ Error: {str(e)}", "", None
     def calculate_quality(self, entities):
         """
         Score the quality of extraction (0-1 scale).
