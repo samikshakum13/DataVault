@@ -147,44 +147,42 @@ class ResumeNER:
     
     # ==================== EXTRACT ALL ====================
     def extract_all(self, text):
-        """Extract all entities - FIXED VERSION."""
+        """SIMPLIFIED extraction - direct patterns."""
         
-        lines = [l.strip() for l in text.split('\n') if l.strip()]
+        lines = text.split('\n')
         
-        # ===== NAMES: FIRST LINE ONLY =====
+        # ===== NAMES: FIRST LINE LITERALLY =====
         names = []
-        if lines and len(lines[0]) < 50:
-            first_line = lines[0]
-            # Must be ALL CAPS or Title Case, 2-4 words
-            words = first_line.split()
-            if 2 <= len(words) <= 4:
-                # Check if looks like name (all words capitalized)
-                if all(w[0].isupper() for w in words):
-                    # Skip if contains numbers or keywords
-                    if not any(c.isdigit() for c in first_line) and \
-                    not any(x in first_line.lower() for x in ['resume', 'cv', 'profile', 'data', 'analyst']):
-                        names.append(first_line)
+        if lines:
+            first = lines[0].strip()
+            # If first line has no numbers, no emails, no symbols, and 2-4 words = NAME
+            if (first and 
+                len(first) < 50 and 
+                '@' not in first and 
+                '|' not in first and
+                not any(c.isdigit() for c in first)):
+                names = [first]
+        
+        # ===== PHONES: SUPER SIMPLE =====
+        phones = []
+        # Look for: +91 with 10 digits after (with or without spaces)
+        phone_pattern = r'\+91\s*[6-9]\d[\s\d]{8,}'
+        phone_matches = re.findall(phone_pattern, text)
+        for p in phone_matches:
+            # Clean spaces
+            p_clean = re.sub(r'\s+', '', p)
+            phones.append(p_clean)
         
         # ===== EMAILS =====
         emails = self.extract_emails(text)
         
-        # ===== PHONES: FIXED =====
-        phones = self.extract_phones(text)
-        
-        # ===== LOCATIONS: ONLY FIRST 300 CHARS (where location info is) =====
+        # ===== LOCATIONS: ONLY SECOND LINE =====
         locations = []
-        first_section = text[:300]  # Only check first part
-        
-        # Pattern: "City, State" format
-        pattern = r'([A-Z][a-z]+),\s*([A-Z][a-z]+)'
-        matches = re.findall(pattern, first_section)
-        
-        for match in matches:
-            location = f"{match[0]}, {match[1]}"
-            # Skip if it looks like a skill/keyword
-            if not any(x in location.lower() for x in ['python', 'sql', 'numpy', 'pandas', 'power', 'data', 'analyst']):
-                if location not in locations:
-                    locations.append(location)
+        if len(lines) > 1:
+            second = lines[1].strip()
+            # Second line often has location (City, State)
+            if ',' in second and len(second) < 50:
+                locations = [second]
         
         # ===== COMPANIES =====
         companies = self.extract_companies_regex(text)
