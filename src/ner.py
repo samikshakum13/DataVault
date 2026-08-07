@@ -210,59 +210,75 @@ class ResumeNER:
         # ===== NAMES =====
         names = []
 
-        # Check only the first 10 lines of the resume
-        lines = text.split("\n")[:10]
+        # First try spaCy PERSON entities
+        doc = self.nlp(text)
 
-        for line in lines:
-            line = line.strip()
+        for ent in doc.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text.strip()
 
-            if not line or len(line) > 50:
-                continue
+                if 2 <= len(name.split()) <= 4 and len(name) < 50:
+                    if not any(
+                        word in name.lower()
+                        for word in [
+                            "resume",
+                            "profile",
+                            "summary",
+                            "fresher",
+                            "analyst",
+                            "engineer",
+                            "developer",
+                        ]
+                    ):
+                        names.append(name)
+                        break
 
-            # Name format:
-            # Rahul Sharma
-            # Rahul Kumar Sharma
-            # Rohan P Sharma
-            pattern = r"^[A-Z][a-z]+(?:\s+[A-Z](?:[a-z]+)?)?(?:\s+[A-Z][a-z]+){1,2}$"
+        # Fallback: find a 2-3 word capitalized name anywhere in text
+        if not names:
+            pattern = r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}\b"
 
-            if re.fullmatch(pattern, line):
-                skip_words = [
-                    "resume",
-                    "curriculum",
-                    "vitae",
-                    "profile",
-                    "summary",
-                    "fresher",
-                    "engineer",
-                    "developer",
-                    "analyst",
-                ]
+            matches = re.findall(pattern, text)
 
-                if not any(word in line.lower() for word in skip_words):
-                    names.append(line)
+            skip_words = [
+                "Data Science",
+                "Data Analytics",
+                "Data Cleaning",
+                "Technical Skills",
+                "Strong Foundation",
+                "Sales Data",
+                "Actionable Business",
+                "Exploratory Data",
+                "Power Bi",
+                "Pune Maharashtra",
+            ]
+
+            for match in matches:
+                if match not in skip_words:
+                    names.append(match)
                     break
 
         # ===== LOCATIONS =====
         locations = []
 
-        # Use spaCy for geographical entities
+        # Use spaCy for locations
         doc = self.nlp(text)
 
         for ent in doc.ents:
             if ent.label_ in ["GPE", "LOC"]:
                 location = ent.text.strip()
 
-                if 1 <= len(location.split()) <= 4 and len(location) < 50:
+                # Keep only short location names
+                if 1 <= len(location.split()) <= 3 and len(location) <= 40:
                     if location not in locations:
                         locations.append(location)
 
-        # Also detect common "City, State" format
-        pattern = r"\b([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*),\s*([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\b"
+        # Explicit City, State pattern
+        location_pattern = r"\b([A-Z][a-z]+),\s*([A-Z][a-z]+)\b"
 
-        matches = re.findall(pattern, text)
+        matches = re.findall(location_pattern, text)
 
-        for match in matches:
-            location = f"{match[0]}, {match[1]}"
+        for city, state in matches:
+            location = f"{city}, {state}"
 
             if location not in locations:
                 locations.append(location)
