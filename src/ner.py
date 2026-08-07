@@ -54,13 +54,12 @@ class ResumeNER:
     
     # ==================== PHONES ====================
     def extract_phones(self, text):
-        """Extract phone numbers using regex."""
+        """Extract phone numbers - handle spaces."""
         patterns = [
-            r'\+91[6-9]\d{9}',  # India: +91 XXXXXXXXXX
-            r'0[6-9]\d{9}',      # India: 0XXXXXXXXXX
-            r'\+1\d{10}',        # US: +1 XXXXXXXXXX
-            r'\(\d{3}\)\s*\d{3}-\d{4}',  # US: (XXX) XXX-XXXX
-            r'\d{10}',           # 10 digit number
+            r'\+91\s*[6-9]\d{1}\s*\d{4}\s*\d{4}',  # India with spaces: +91 98765 43210
+            r'\+91[6-9]\d{9}',                      # India no spaces: +919876543210
+            r'0[6-9]\d{9}',                         # India landline
+            r'\+1\d{10}',                           # US
         ]
         
         phones = []
@@ -68,7 +67,7 @@ class ResumeNER:
             matches = re.findall(pattern, text)
             phones.extend(matches)
         
-        return list(set(phones))  # Remove duplicates
+        return list(set(phones))
     
     # ==================== COMPANIES ====================
     def extract_companies_regex(self, text):
@@ -148,46 +147,52 @@ class ResumeNER:
     
     # ==================== EXTRACT ALL ====================
     def extract_all(self, text):
-        """Extract all entities - OPTIMIZED FOR STANDARD RESUME FORMAT."""
+        """Extract all entities - FIXED VERSION."""
         
-        # ===== NAMES: FIRST NON-EMPTY LINE =====
-        names = []
         lines = [l.strip() for l in text.split('\n') if l.strip()]
         
-        # First line is usually the name
-        if lines:
+        # ===== NAMES: FIRST LINE ONLY =====
+        names = []
+        if lines and len(lines[0]) < 50:
             first_line = lines[0]
-            # If it's 2-3 capitalized words (typical name)
+            # Must be ALL CAPS or Title Case, 2-4 words
             words = first_line.split()
-            if 1 <= len(words) <= 4 and all(w[0].isupper() for w in words) and len(first_line) < 50:
-                names.append(first_line)
+            if 2 <= len(words) <= 4:
+                # Check if looks like name (all words capitalized)
+                if all(w[0].isupper() for w in words):
+                    # Skip if contains numbers or keywords
+                    if not any(c.isdigit() for c in first_line) and \
+                    not any(x in first_line.lower() for x in ['resume', 'cv', 'profile', 'data', 'analyst']):
+                        names.append(first_line)
         
-        # ===== EMAILS: REGEX (99% ACCURATE) =====
+        # ===== EMAILS =====
         emails = self.extract_emails(text)
         
-        # ===== PHONES: REGEX (95% ACCURATE) =====
+        # ===== PHONES: FIXED =====
         phones = self.extract_phones(text)
         
-        # ===== LOCATIONS: LOOK FOR "City, State" PATTERN =====
+        # ===== LOCATIONS: ONLY FIRST 300 CHARS (where location info is) =====
         locations = []
-        pattern = r'([A-Z][a-z]+),\s*([A-Z][a-z]+)'  # "Pune, Maharashtra"
-        matches = re.findall(pattern, text[:500])  # Check first 500 chars
+        first_section = text[:300]  # Only check first part
+        
+        # Pattern: "City, State" format
+        pattern = r'([A-Z][a-z]+),\s*([A-Z][a-z]+)'
+        matches = re.findall(pattern, first_section)
+        
         for match in matches:
             location = f"{match[0]}, {match[1]}"
-            if location not in locations:
-                locations.append(location)
+            # Skip if it looks like a skill/keyword
+            if not any(x in location.lower() for x in ['python', 'sql', 'numpy', 'pandas', 'power', 'data', 'analyst']):
+                if location not in locations:
+                    locations.append(location)
         
-        # Also use spaCy
-        locations.extend(self.extract_locations_spacy(text))
-        locations = list(set(locations))  # Remove duplicates
-        
-        # ===== COMPANIES: KEYWORD PATTERNS =====
+        # ===== COMPANIES =====
         companies = self.extract_companies_regex(text)
         
-        # ===== SKILLS: KEYWORD MATCHING =====
+        # ===== SKILLS =====
         skills = self.extract_skills(text)
         
-        # ===== YEARS: DATES =====
+        # ===== YEARS =====
         years = self.extract_years(text)
         
         return {
