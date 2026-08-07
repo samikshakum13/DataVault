@@ -147,48 +147,60 @@ class ResumeNER:
     
     # ==================== EXTRACT ALL ====================
     def extract_all(self, text):
-        """Extract entities - STANDARD RESUME FORMAT."""
+        """Extract entities - FIXED FOR ALL FORMATS."""
         
+        # Split and clean lines
         lines = [l.strip() for l in text.split('\n') if l.strip()]
         
-        # ===== LINE 0: ALWAYS THE NAME =====
+        # ===== NAMES: First line (usually name) =====
         names = []
         if lines:
-            names = [lines[0]]  # FIRST LINE = NAME (ALWAYS!)
+            first_line = lines[0]
+            # Check if looks like a name (no special chars, 2-4 words)
+            words = first_line.split()
+            if (2 <= len(words) <= 4 and 
+                '@' not in first_line and 
+                '|' not in first_line and
+                '+' not in first_line and
+                not any(c.isdigit() for c in first_line)):
+                names = [first_line]
         
-        # ===== LINE 1: ALWAYS THE LOCATION =====
+        # ===== LOCATIONS: Second line (usually location) =====
         locations = []
         if len(lines) > 1:
-            locations = [lines[1]]  # SECOND LINE = LOCATION (ALWAYS!)
+            second_line = lines[1]
+            # Should have comma (City, State)
+            if ',' in second_line and len(second_line) < 50:
+                locations = [second_line]
         
-        # ===== LINE 2: HAS PHONE AND EMAIL =====
+        # ===== EMAILS: REGEX (working fine) =====
+        emails = self.extract_emails(text)
+        
+        # ===== PHONES: FIX - HANDLE WITH OR WITHOUT + =====
         phones = []
-        emails = []
-        if len(lines) > 2:
-            contact_line = lines[2]  # Format: "+91 XXXXX XXXXX | email@gmail.com"
-            
-            # Split by "|"
-            if '|' in contact_line:
-                phone_part, email_part = contact_line.split('|')
-                
-                # Extract phone (remove spaces)
-                phone_match = re.search(r'\+91\s*[6-9]\d[\s\d]{8,}', phone_part)
-                if phone_match:
-                    phone_clean = re.sub(r'\s+', '', phone_match.group())
-                    phones = [phone_clean]
-                
-                # Extract email
-                email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', email_part)
-                if email_match:
-                    emails = [email_match.group()]
+        # Pattern 1: +91 format
+        pattern1 = r'\+91\s*[6-9]\d[\s\d]{8,}'
+        matches1 = re.findall(pattern1, text)
+        phones.extend([re.sub(r'\s+', '', p) for p in matches1])
         
-        # If not found in line 2, use regex on full text
-        if not emails:
-            emails = self.extract_emails(text)
-        if not phones:
-            phones = self.extract_phones(text)
+        # Pattern 2: 91 format (no plus sign)
+        pattern2 = r'91\s+[6-9]\d[\s\d]{8,}'
+        matches2 = re.findall(pattern2, text)
+        for m in matches2:
+            phone_clean = re.sub(r'\s+', '', m)  # Remove spaces
+            phone_clean = '+' + phone_clean if not phone_clean.startswith('+') else phone_clean
+            phones.append(phone_clean)
         
-        # ===== REST: USE EXISTING METHODS =====
+        # Pattern 3: Indian 10-digit with spaces
+        pattern3 = r'[6-9]\d\s+\d{4}\s+\d{4}'
+        matches3 = re.findall(pattern3, text)
+        for m in matches3:
+            phone_clean = '+91' + re.sub(r'\s+', '', m)
+            phones.append(phone_clean)
+        
+        phones = list(set(phones))  # Remove duplicates
+        
+        # ===== REST =====
         companies = self.extract_companies_regex(text)
         skills = self.extract_skills(text)
         years = self.extract_years(text)
