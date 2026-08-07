@@ -56,7 +56,12 @@ class ResumeExtractorApp:
             
             # Clean
             cleaned_text = self.cleaner.clean(text_extracted)
-            
+            # DEBUG: Print first 10 lines to see structure
+            print("\n=== CLEANED TEXT - FIRST 10 LINES ===")
+            debug_lines = cleaned_text.split('\n')[:10]
+            for i, line in enumerate(debug_lines):
+                print(f"Line {i}: '{line}'")
+            print("===================================\n")
             # Extract using NEW smart NER
             entities = self.ner.extract_all(cleaned_text)
             
