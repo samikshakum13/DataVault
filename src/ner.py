@@ -92,83 +92,101 @@ class ResumeNER:
 
     # ==================== COMPANIES ====================
     def extract_companies_regex(self, text):
-        """Extract company names from resume."""
+        """Extract companies using experience context."""
 
         companies = []
 
-        # Pattern 1:
-        # Worked at TCS
-        # Internship at Infosys
-        # Employed with Accenture
-        pattern1 = r'(?:internship|intern|worked|experience|employed)\s+(?:at|with|by|in)\s+([A-Z][A-Za-z0-9&.,\-\s]{1,50}?)(?=\s*(?:\n|,|from|since|for|as|$))'
+        # Find EXPERIENCE section
+        experience_match = re.search(
+            r'(?:EXPERIENCE|WORK EXPERIENCE|PROFESSIONAL EXPERIENCE)'
+            r'(.*?)(?=\n(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|LANGUAGES)\b|\Z)',
+            text,
+            re.IGNORECASE | re.DOTALL
+        )
 
-        matches = re.findall(pattern1, text, re.IGNORECASE)
-        companies.extend(matches)
+        if not experience_match:
+            return companies
 
-        # Pattern 2:
-        # TCS - Data Analyst
-        # Infosys – Software Engineer
-        # Accenture | Data Analyst
-        pattern2 = r'^([A-Z][A-Za-z0-9&.,\-\s]{1,50}?)\s*[-–|]\s*[A-Z]'
+        experience_text = experience_match.group(1)
 
-        matches = re.findall(pattern2, text, re.MULTILINE)
-        companies.extend(matches)
+        # Common format:
+        # Job Title - Company
+        # Job Title — Company
+        # Job Title | Company
+        pattern = re.compile(
+            r'(?:intern|internship|analyst|developer|engineer|manager|associate|'
+            r'consultant|specialist|executive|designer|scientist)'
+            r'[^|\n–—-]{0,60}'
+            r'(?:\||–|—|-)\s*'
+            r'([A-Z][A-Za-z0-9&., ]{1,50})',
+            re.IGNORECASE
+        )
 
-        # Pattern 3:
-        # Company: TCS
-        # Organization: Infosys
-        pattern3 = r'(?:company|organization|employer)\s*:\s*([A-Z][A-Za-z0-9&.,\-\s]{1,50})'
+        matches = pattern.findall(experience_text)
 
-        matches = re.findall(pattern3, text, re.IGNORECASE)
-        companies.extend(matches)
+        for company in matches:
 
-        # Clean results
-        cleaned = []
+            company = company.strip(" ,.-|:")
 
-        skip_words = [
-            'college',
-            'university',
-            'school',
-            'institute',
-            'project',
-            'system',
-            'experience',
-            'education',
-            'resume',
-            'profile'
-        ]
+            if 1 <= len(company.split()) <= 5:
 
-        for company in companies:
-            company = company.strip(" ,.-|")
+                if company not in companies:
+                    companies.append(company)
 
-            if not company:
-                continue
-
-            if len(company.split()) > 6:
-                continue
-
-            if any(word in company.lower() for word in skip_words):
-                continue
-
-            if company not in cleaned:
-                cleaned.append(company)
-
-        return cleaned
+        return companies
 
     # ==================== LOCATIONS ====================
     def extract_locations_spacy(self, text):
-        """Extract locations using spaCy GPE."""
-        doc = self.nlp(text)
+        """Extract locations from resume using strong location patterns."""
+
         locations = []
 
-        for ent in doc.ents:
-            if ent.label_ == "GPE":  # Geo-Political Entity
-                location = ent.text.strip()
-                # Filter: Only cities/states/countries (short names)
-                if 1 <= len(location.split()) <= 3 and len(location) < 40:
-                    locations.append(location)
+        # ---------------------------------------------------------
+        # 1. Strong pattern: City, State / City, Country
+        # ---------------------------------------------------------
+        location_pattern = re.compile(
+            r'\b'
+            r'([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)'
+            r',\s*'
+            r'([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)'
+            r'(?:,\s*([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*))?'
+            r'\b'
+        )
 
-        return list(set(locations))
+        for match in location_pattern.finditer(text):
+
+            city = match.group(1).strip()
+            state = match.group(2).strip()
+            country = match.group(3)
+
+            if country:
+                location = f"{city}, {state}, {country.strip()}"
+            else:
+                location = f"{city}, {state}"
+
+            locations.append(location)
+
+        # ---------------------------------------------------------
+        # 2. Location mentioned after a location-related label
+        # ---------------------------------------------------------
+        labelled_pattern = re.compile(
+            r'(?:location|address|based in|located in|residing in)'
+            r'\s*[:\-]?\s*'
+            r'([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*'
+            r'(?:,\s*[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)?)',
+            re.IGNORECASE
+        )
+
+        for match in labelled_pattern.finditer(text):
+            location = match.group(1).strip()
+            locations.append(location)
+
+        # ---------------------------------------------------------
+        # 3. Remove duplicates
+        # ---------------------------------------------------------
+        locations = list(dict.fromkeys(locations))
+
+        return locations
 
     # ==================== SKILLS ====================
     def extract_skills(self, text):
@@ -210,68 +228,108 @@ class ResumeNER:
         # ===== NAMES =====
         names = []
 
-        # First try spaCy PERSON entities
-        doc = self.nlp(text)
+        # Take first 10 non-empty lines
+        lines = [line.strip() for line in text.splitlines() if line.strip()][:10]
 
-        for ent in doc.ents:
-            if ent.label_ == "PERSON":
-                name = ent.text.strip()
+        name_pattern = r"^[A-Z][A-Za-z.'-]*(?:\s+[A-Z][A-Za-z.'-]*){1,3}$"
 
-                if 2 <= len(name.split()) <= 4 and len(name) < 50:
-                    if not any(
-                        word in name.lower()
-                        for word in [
-                            "resume",
-                            "profile",
-                            "summary",
-                            "fresher",
-                            "analyst",
-                            "engineer",
-                            "developer",
-                        ]
-                    ):
-                        names.append(name)
-                        break
+        skip_words = {
+            "resume",
+            "curriculum",
+            "vitae",
+            "profile",
+            "summary",
+            "professional",
+            "technical",
+            "skills",
+            "experience",
+            "education",
+            "projects",
+            "certifications",
+            "languages",
+            "data",
+            "analyst",
+            "engineer",
+            "developer",
+            "power",
+            "bi",
+        }
 
-        # Fallback: find a 2-3 word capitalized name anywhere in text
-        if not names:
-            pattern = r"\b[A-Z][a-z]+\s+[A-Z][a-z]+\b"
+        for line in lines:
 
-            matches = re.findall(pattern, text)
+            # Ignore contact/location lines
+            if "@" in line or re.search(r"\+?\d[\d\s().-]{7,}", line):
+                continue
 
-            skip_words = [
-                "Data Science",
-                "Data Analytics",
-                "Data Analysis",
-                "Data Cleaning",
-                "Data Visualization",
-                "Technical Skills",
-                "Strong Foundation",
-                "Exploratory Data",
-                "Power Bi",
-                "Sales Data",
-                "Structured Data",
-                "Pune Maharashtra",
-            ]
+            # Ignore obvious location lines
+            if "," in line:
+                continue
 
-            for match in matches:
-                if match not in skip_words:
-                    names.append(match)
+            # Must look like a name
+            if re.fullmatch(name_pattern, line):
+
+                words = line.lower().split()
+
+                # Reject technical/section phrases
+                if not any(word in skip_words for word in words):
+
+                    names.append(line.title())
                     break
 
         # ===== LOCATIONS =====
         locations = []
 
-        # Detect City, State
-        location_pattern = r"\b([A-Z][a-zA-Z]+),\s*([A-Z][a-zA-Z]+)\b"
+        # First 15 meaningful lines are the resume header
+        header_lines = [
+            line.strip()
+            for line in text.splitlines()
+            if line.strip()
+        ][:15]
 
-        matches = re.findall(location_pattern, text)
+        # City, State or City, State, Country
+        location_pattern = re.compile(
+            r'^[A-Z][A-Za-z .-]+,\s*[A-Z][A-Za-z .-]+'
+            r'(?:,\s*[A-Z][A-Za-z .-]+)?$'
+        )
 
-        for city, state in matches:
-            location = f"{city.strip()}, {state.strip()}"
+        for line in header_lines:
 
-            if location not in locations:
-                locations.append(location)
+            # Remove contact information if on same line
+            line = re.sub(
+                r'\+?\d[\d\s().-]{7,}',
+                '',
+                line
+            )
+
+            # Remove email
+            line = re.sub(
+                r'\S+@\S+',
+                '',
+                line
+            )
+
+            line = line.strip(" |,-")
+
+            if location_pattern.fullmatch(line):
+
+                # Reject obvious non-location phrases
+                invalid = [
+                    'data',
+                    'power bi',
+                    'technical skills',
+                    'data science',
+                    'data analytics',
+                    'data analysis',
+                    'data cleaning',
+                    'data visualization'
+                ]
+
+                if line.lower() not in invalid:
+                    locations.append(line)
+
+        # Remove duplicates
+        locations = list(dict.fromkeys(locations))
+
 
         # ===== EMAILS: REGEX (works ANY format) =====
         emails = self.extract_emails(text)
