@@ -224,7 +224,7 @@ class ResumeNER:
     # ==================== EXTRACT ALL ====================
     def extract_all(self, text):
         """Extract entities - WORKS ON ANY RESUME FORMAT."""
-
+        
         # ===== NAMES =====
         names = []
 
@@ -278,57 +278,31 @@ class ResumeNER:
 
         # ===== LOCATIONS =====
         locations = []
-
-        # First 15 meaningful lines are the resume header
-        header_lines = [
-            line.strip()
-            for line in text.splitlines()
-            if line.strip()
-        ][:15]
-
-        # City, State or City, State, Country
-        location_pattern = re.compile(
-            r'^[A-Z][A-Za-z .-]+,\s*[A-Z][A-Za-z .-]+'
-            r'(?:,\s*[A-Z][A-Za-z .-]+)?$'
-        )
-
-        for line in header_lines:
-
-            # Remove contact information if on same line
-            line = re.sub(
-                r'\+?\d[\d\s().-]{7,}',
-                '',
-                line
-            )
-
-            # Remove email
-            line = re.sub(
-                r'\S+@\S+',
-                '',
-                line
-            )
-
-            line = line.strip(" |,-")
-
-            if location_pattern.fullmatch(line):
-
-                # Reject obvious non-location phrases
-                invalid = [
-                    'data',
-                    'power bi',
-                    'technical skills',
-                    'data science',
-                    'data analytics',
-                    'data analysis',
-                    'data cleaning',
-                    'data visualization'
-                ]
-
-                if line.lower() not in invalid:
-                    locations.append(line)
-
-        # Remove duplicates
-        locations = list(dict.fromkeys(locations))
+    
+        # Check first 500 chars (where location usually is)
+        text_short = text[:500]
+        lines_short = text_short.split('\n')
+        
+        for line in lines_short[:10]:
+            line = line.strip()
+            
+            # Must have comma
+            if ',' not in line:
+                continue
+            
+            # Remove phone/email from line
+            line_clean = re.sub(r'\+?\d[\d\s().-]{7,}', '', line)  # Remove phones
+            line_clean = re.sub(r'\S+@\S+', '', line_clean)  # Remove emails
+            line_clean = line_clean.strip()
+            
+            # Pattern: Word, Word (both capitalized)
+            if re.match(r'^[A-Z][a-z\s]+,\s*[A-Z][a-z\s]+$', line_clean):
+                # Make sure not a skill
+                if not any(x in line_clean.lower() for x in 
+                    ['data', 'power', 'sql', 'python', 'analytics']):
+                    locations.append(line_clean)
+                    break  # Take first match
+    
 
 
         # ===== EMAILS: REGEX (works ANY format) =====
