@@ -235,20 +235,22 @@ class ResumeNER:
 
         # Fallback: find a 2-3 word capitalized name anywhere in text
         if not names:
-            pattern = r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2}\b"
+            pattern = r"\b[A-Z][a-z]+\s+[A-Z][a-z]+\b"
 
             matches = re.findall(pattern, text)
 
             skip_words = [
                 "Data Science",
                 "Data Analytics",
+                "Data Analysis",
                 "Data Cleaning",
+                "Data Visualization",
                 "Technical Skills",
                 "Strong Foundation",
-                "Sales Data",
-                "Actionable Business",
                 "Exploratory Data",
                 "Power Bi",
+                "Sales Data",
+                "Structured Data",
                 "Pune Maharashtra",
             ]
 
@@ -260,25 +262,13 @@ class ResumeNER:
         # ===== LOCATIONS =====
         locations = []
 
-        # Use spaCy for locations
-        doc = self.nlp(text)
-
-        for ent in doc.ents:
-            if ent.label_ in ["GPE", "LOC"]:
-                location = ent.text.strip()
-
-                # Keep only short location names
-                if 1 <= len(location.split()) <= 3 and len(location) <= 40:
-                    if location not in locations:
-                        locations.append(location)
-
-        # Explicit City, State pattern
-        location_pattern = r"\b([A-Z][a-z]+),\s*([A-Z][a-z]+)\b"
+        # Detect City, State
+        location_pattern = r"\b([A-Z][a-zA-Z]+),\s*([A-Z][a-zA-Z]+)\b"
 
         matches = re.findall(location_pattern, text)
 
         for city, state in matches:
-            location = f"{city}, {state}"
+            location = f"{city.strip()}, {state.strip()}"
 
             if location not in locations:
                 locations.append(location)
