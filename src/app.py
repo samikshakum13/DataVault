@@ -211,87 +211,227 @@ class ResumeExtractorApp:
         return html
 
     def launch(self):
-        """
-        Launch the Gradio web interface.
+        """Launch beautiful Gradio interface with modern design."""
+        import gradio as gr
         
-        This creates a beautiful, responsive web app.
+        # Custom CSS for beautiful styling
+        custom_css = """
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .gradio-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        
+        .upload-section {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px dashed #667eea;
+        }
+        
+        .result-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .result-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            transform: translateX(5px);
+        }
+        
+        .result-card.names { border-left-color: #667eea; }
+        .result-card.emails { border-left-color: #f093fb; }
+        .result-card.phones { border-left-color: #4facfe; }
+        .result-card.companies { border-left-color: #43e97b; }
+        .result-card.locations { border-left-color: #fa709a; }
+        .result-card.skills { border-left-color: #30cfd0; }
+        .result-card.years { border-left-color: #a8edea; }
+        
+        .result-label {
+            font-weight: 700;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .result-content {
+            color: #555;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .quality-score {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .quality-score-value {
+            font-size: 3em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .quality-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .quality-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .how-it-works {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
         """
-
-        # Create Gradio interface
-        with gr.Blocks(title="DataVault - Resume Extractor") as demo:
-
+        
+        with gr.Blocks(css=custom_css, title="DataVault - Resume Extractor") as demo:
+            
             # Header
-            gr.Markdown("""
-            # 📄 DataVault Resume Extractor
-            
-            **Upload a resume PDF and extract structured data instantly**
-            
-            This system uses NLP to extract:
-            - Names, emails, phone numbers
-            - Companies and job titles
-            - Skills and education
-            - Locations and work dates
+            gr.HTML("""
+            <div class="header">
+                <h1>📄 DataVault Resume Extractor</h1>
+                <p>Extract structured data from resumes using advanced NLP</p>
+            </div>
             """)
-
-            # Main content
-            with gr.Row():
-                with gr.Column(scale=1):
-                    # Input: File upload
-                    pdf_input = gr.File(
-                        label="📤 Upload Resume PDF",
-                        file_types=[".pdf"],
-                        file_count="single"
-                    )
-
-                    # Processing button
-                    extract_btn = gr.Button(
-                        "🚀 Extract Data",
-                        variant="primary",
-                        size="lg"
-                    )
-
-                with gr.Column(scale=1):
-                    # Output: Status
-                    status_output = gr.Textbox(
-                        label="Status",
-                        interactive=False,
-                        lines=1
-                    )
-
-            # Results display
-            results_output = gr.HTML(
-                label="📊 Results",
-                value="<p style='color: #9ca3af;'>Upload a PDF and click Extract to see results...</p>"
+            
+            # Upload Section
+            gr.HTML('<div class="upload-section">')
+            gr.Markdown("### Upload Your Resume PDF")
+            pdf_input = gr.File(
+                label="📤 Select Resume PDF",
+                file_types=[".pdf"],
+                file_count="single"
             )
-
-            # JSON download
-            json_output = gr.Textbox(
-                label="📋 JSON (for downloading/processing)",
-                interactive=False,
-                lines=10,
-                visible=False
-            )
-
-            # Connect button to processing function
+            extract_btn = gr.Button("🚀 Extract Data", variant="primary", size="lg")
+            gr.HTML('</div>')
+            
+            # Results Section
+            gr.HTML('<div class="results-section">')
+            
+            quality_output = gr.HTML("""
+            <div class="quality-score">
+                <div class="quality-score-title">Quality Score</div>
+                <div class="quality-score-value">--</div>
+                <div class="quality-bar">
+                    <div class="quality-fill" style="width: 0%"></div>
+                </div>
+            </div>
+            """)
+            
+            names_output = gr.HTML('<div class="result-card names"><div class="result-label">👤 Names</div><div class="result-content">No names found</div></div>')
+            emails_output = gr.HTML('<div class="result-card emails"><div class="result-label">✉️ Emails</div><div class="result-content">No emails found</div></div>')
+            phones_output = gr.HTML('<div class="result-card phones"><div class="result-label">📞 Phones</div><div class="result-content">No phones found</div></div>')
+            companies_output = gr.HTML('<div class="result-card companies"><div class="result-label">🏢 Companies</div><div class="result-content">No companies found</div></div>')
+            locations_output = gr.HTML('<div class="result-card locations"><div class="result-label">📍 Locations</div><div class="result-content">No locations found</div></div>')
+            skills_output = gr.HTML('<div class="result-card skills"><div class="result-label">⚡ Skills</div><div class="result-content">No skills found</div></div>')
+            years_output = gr.HTML('<div class="result-card years"><div class="result-label">📅 Years</div><div class="result-content">No years found</div></div>')
+            
+            gr.HTML('</div>')
+            
+            # How It Works
+            gr.HTML("""
+            <div class="how-it-works">
+                <h3>How It Works</h3>
+                <ol>
+                    <li>Upload a resume PDF</li>
+                    <li>Click "Extract Data"</li>
+                    <li>View structured entities instantly</li>
+                    <li>Copy JSON for further processing</li>
+                </ol>
+                <p><strong>Built with:</strong> pdfplumber • spaCy NLP • Gradio</p>
+            </div>
+            """)
+            
+            # Footer
+            gr.HTML("""
+            <div class="footer">
+                <p>DataVault © 2026 | Powered by AI & Machine Learning</p>
+                <p><a href="https://github.com/samikshakum13/DataVault" target="_blank">GitHub Repository</a></p>
+            </div>
+            """)
+            
+            # Connect button
             extract_btn.click(
                 fn=self.extract_from_pdf,
                 inputs=[pdf_input],
-                outputs=[status_output, results_output, json_output]
+                outputs=[
+                    names_output,
+                    emails_output,
+                    phones_output,
+                    companies_output,
+                    locations_output,
+                    skills_output,
+                    years_output,
+                    quality_output
+                ]
             )
-
-            # Footer
-            gr.Markdown("""
-            ---
-            
-            **How it works:**
-            1. Upload a resume PDF
-            2. Click "Extract Data"
-            3. View structured entities
-            4. Copy JSON for further processing
-            
-            **Built with:** pdfplumber, spaCy, Gradio
-            """)
-
+        
         return demo
 
 
