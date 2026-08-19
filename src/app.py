@@ -40,9 +40,9 @@ class ResumeExtractorApp:
         try:
             if pdf_file is None:
                 return "❌ Upload a PDF", "", None
-            
+
             print(f"\n📄 Processing: {pdf_file}")
-            
+
             # Extract text
             text_extracted = ""
             with pdfplumber.open(pdf_file) as pdf:
@@ -50,10 +50,10 @@ class ResumeExtractorApp:
                     text = page.extract_text()
                     if text:
                         text_extracted += text + "\n"
-            
+
             if not text_extracted:
                 return "❌ Could not extract text", "", None
-            
+
             # Clean
             cleaned_text = self.cleaner.clean(text_extracted)
             # DEBUG: Print first 10 lines to see structure
@@ -63,28 +63,28 @@ class ResumeExtractorApp:
                 print(f"Line {i}: '{line}'")
             print("===================================\n")
             # Extract using NEW smart NER
-            entities = self.ner.extract_all(cleaned_text)
-            
+            entities = self.ner.extract_all(text_extracted)
+
             # Post-process
             for key in entities:
                 if entities[key]:
                     entities[key] = list(set(entities[key]))
-            
+
             # Quality score
             quality_score = self.calculate_quality(entities)
-            
+
             result = {
                 "status": "success",
                 "filename": pdf_file.split('/')[-1] if '/' in pdf_file else pdf_file,
                 "quality_score": quality_score,
                 "entities": entities
             }
-            
+
             html_result = self.format_html(result)
             json_result = json.dumps(result, indent=2)
-            
+
             return "✅ Success!", html_result, json_result
-        
+
         except Exception as e:
             return f"❌ Error: {str(e)}", "", None
     def calculate_quality(self, entities):
