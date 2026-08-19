@@ -224,7 +224,7 @@ class ResumeNER:
     # ==================== EXTRACT ALL ====================
     def extract_all(self, text):
         """Extract entities - WORKS ON ANY RESUME FORMAT."""
-        
+
         # ===== NAMES =====
         names = []
 
@@ -276,34 +276,37 @@ class ResumeNER:
                     names.append(line.title())
                     break
 
-        # ===== LOCATIONS =====
+        # ===== LOCATIONS: CITY, STATE =====
         locations = []
-    
-        # Check first 500 chars (where location usually is)
+
+        # Check first 500 chars
         text_short = text[:500]
-        lines_short = text_short.split('\n')
-        
+        lines_short = text_short.split("\n")
+
         for line in lines_short[:10]:
             line = line.strip()
-            
-            # Must have comma
-            if ',' not in line:
+
+            if "," not in line:
                 continue
-            
-            # Remove phone/email from line
-            line_clean = re.sub(r'\+?\d[\d\s().-]{7,}', '', line)  # Remove phones
-            line_clean = re.sub(r'\S+@\S+', '', line_clean)  # Remove emails
+
+            # Remove phone/email/URLs from line
+            line_clean = re.sub(r"\+?\d[\d\s().-]{7,}", "", line)  # Remove phones
+            line_clean = re.sub(r"\S+@\S+", "", line_clean)  # Remove emails
+            line_clean = re.sub(r"linkedin\.\S+", "", line_clean)  # Remove LinkedIn
+            line_clean = line_clean.replace("|", "")  # Remove pipes
             line_clean = line_clean.strip()
-            
-            # Pattern: Word, Word (both capitalized)
-            if re.match(r'^[A-Z][a-z\s]+,\s*[A-Z][a-z\s]+$', line_clean):
+
+            # Pattern: City, State OR City, State, Country
+            # More flexible - allows 2 or 3 parts
+            if re.match(r"^[A-Z][a-z\s]+,\s*[A-Z][a-z\s]+(?:,\s*[A-Z][a-z\s]+)?$", line_clean):
                 # Make sure not a skill
-                if not any(x in line_clean.lower() for x in 
-                    ['data', 'power', 'sql', 'python', 'analytics']):
+                if not any(
+                    x in line_clean.lower()
+                    for x in ["data", "power", "sql", "python", "analytics"]
+                ):
                     locations.append(line_clean)
                     break  # Take first match
-    
-
+                
 
         # ===== EMAILS: REGEX (works ANY format) =====
         emails = self.extract_emails(text)
