@@ -123,25 +123,28 @@ class ResumeExtractorApp:
         entities = result.get('entities', {})
         quality = result.get('quality_score', 0)
 
-        # Determine quality color
+        # Determine quality color - MORE OPAQUE & DARKER
         if quality >= 0.85:
-            quality_color = "#10b981"  # green
+            quality_color = "#059669"  # Darker green
+            quality_bg = "#d1fae5"     # Light green background
         elif quality >= 0.70:
-            quality_color = "#f59e0b"  # amber
+            quality_color = "#d97706"  # Darker amber
+            quality_bg = "#fef3c7"     # Light amber background
         else:
-            quality_color = "#ef4444"  # red
+            quality_color = "#dc2626"  # Darker red
+            quality_bg = "#fee2e2"     # Light red background
 
         html = f"""
         <div style="font-family: sans-serif; padding: 20px; background: #f9fafb; border-radius: 8px;">
             
             <h2 style="margin: 0 0 20px; color: #1f2937;">📋 Extraction Results</h2>
             
-            <div style="margin-bottom: 20px; padding: 12px; background: white; border-radius: 6px;">
+            <div style="margin-bottom: 20px; padding: 16px; background: {quality_bg}; border-radius: 8px; border-left: 4px solid {quality_color};">
                 <p style="margin: 8px 0;"><strong>File:</strong> {result.get('filename', 'unknown')}</p>
                 <p style="margin: 8px 0;"><strong>Pages:</strong> {result.get('pages', '?')}</p>
-                <p style="margin: 8px 0;">
+                <p style="margin: 8px 0; display: flex; align-items: center; gap: 10px;">
                     <strong>Quality Score:</strong> 
-                    <span style="background: {quality_color}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">
+                    <span style="background: {quality_color}; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 16px;">
                         {quality:.0%}
                     </span>
                 </p>
