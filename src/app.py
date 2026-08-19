@@ -123,28 +123,31 @@ class ResumeExtractorApp:
         entities = result.get('entities', {})
         quality = result.get('quality_score', 0)
 
-        # Determine quality color - MORE OPAQUE & DARKER
+        # Determine quality color - DARK TEXT FOR VISIBILITY
         if quality >= 0.85:
             quality_color = "#059669"  # Darker green
             quality_bg = "#d1fae5"     # Light green background
+            text_color = "#065f46"     # VERY DARK green text
         elif quality >= 0.70:
             quality_color = "#d97706"  # Darker amber
             quality_bg = "#fef3c7"     # Light amber background
+            text_color = "#78350f"     # VERY DARK amber text
         else:
             quality_color = "#dc2626"  # Darker red
             quality_bg = "#fee2e2"     # Light red background
+            text_color = "#7f1d1d"     # VERY DARK red text
 
         html = f"""
         <div style="font-family: sans-serif; padding: 20px; background: #f9fafb; border-radius: 8px;">
             
             <h2 style="margin: 0 0 20px; color: #1f2937;">📋 Extraction Results</h2>
             
-            <div style="margin-bottom: 20px; padding: 16px; background: {quality_bg}; border-radius: 8px; border-left: 4px solid {quality_color};">
-                <p style="margin: 8px 0;"><strong>File:</strong> {result.get('filename', 'unknown')}</p>
-                <p style="margin: 8px 0;"><strong>Pages:</strong> {result.get('pages', '?')}</p>
-                <p style="margin: 8px 0; display: flex; align-items: center; gap: 10px;">
-                    <strong>Quality Score:</strong> 
-                    <span style="background: {quality_color}; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 16px;">
+            <div style="margin-bottom: 20px; padding: 20px; background: {quality_bg}; border-radius: 8px; border-left: 4px solid {quality_color};">
+                <p style="margin: 8px 0; color: #1f2937;"><strong>File:</strong> {result.get('filename', 'unknown')}</p>
+                <p style="margin: 8px 0; color: #1f2937;"><strong>Pages:</strong> {result.get('pages', '?')}</p>
+                <p style="margin: 12px 0; display: flex; align-items: center; gap: 15px;">
+                    <strong style="color: {text_color};">Quality Score:</strong> 
+                    <span style="background: {quality_color}; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
                         {quality:.0%}
                     </span>
                 </p>
@@ -155,7 +158,7 @@ class ResumeExtractorApp:
             <!-- Names -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #3b82f6; border-radius: 4px;">
                 <strong style="color: #1f2937;">👤 Names</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('names', [])) or 'No names found'}
                 </span>
             </div>
@@ -163,7 +166,7 @@ class ResumeExtractorApp:
             <!-- Emails -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #8b5cf6; border-radius: 4px;">
                 <strong style="color: #1f2937;">✉️ Emails</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('emails', [])) or 'No emails found'}
                 </span>
             </div>
@@ -171,7 +174,7 @@ class ResumeExtractorApp:
             <!-- Phones -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #ec4899; border-radius: 4px;">
                 <strong style="color: #1f2937;">📞 Phones</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('phones', [])) or 'No phones found'}
                 </span>
             </div>
@@ -179,7 +182,7 @@ class ResumeExtractorApp:
             <!-- Companies -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #f59e0b; border-radius: 4px;">
                 <strong style="color: #1f2937;">🏢 Companies</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('companies', [])) or 'No companies found'}
                 </span>
             </div>
@@ -187,7 +190,7 @@ class ResumeExtractorApp:
             <!-- Locations -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #10b981; border-radius: 4px;">
                 <strong style="color: #1f2937;">📍 Locations</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('locations', [])) or 'No locations found'}
                 </span>
             </div>
@@ -195,7 +198,7 @@ class ResumeExtractorApp:
             <!-- Skills -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #06b6d4; border-radius: 4px;">
                 <strong style="color: #1f2937;">⚡ Skills</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('skills', [])) or 'No skills found'}
                 </span>
             </div>
@@ -203,7 +206,7 @@ class ResumeExtractorApp:
             <!-- Years -->
             <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #6366f1; border-radius: 4px;">
                 <strong style="color: #1f2937;">📅 Years</strong><br>
-                <span style="color: #6b7280; font-size: 13px;">
+                <span style="color: #4b5563; font-size: 13px;">
                     {', '.join(entities.get('years', [])) or 'No years found'}
                 </span>
             </div>
