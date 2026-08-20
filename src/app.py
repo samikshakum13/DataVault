@@ -211,6 +211,14 @@ class ResumeExtractorApp:
                 </span>
             </div>
             
+            <!-- Experience -->
+            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #f97316; border-radius: 4px;">
+                <strong style="color: #1f2937;">💼 Experience</strong><br>
+                <span style="color: #4b5563; font-size: 13px;">
+                    {', '.join(entities.get('experience', [])) or 'No experience found'}
+                </span>
+            </div>
+            
         </div>
         """
 

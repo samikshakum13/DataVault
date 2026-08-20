@@ -222,6 +222,31 @@ class ResumeNER:
         return sorted(list(set(years)))
 
     # ==================== EXTRACT ALL ====================
+    # ==================== EXPERIENCE ====================
+    def extract_experience(self, text):
+        """Extract work experience from resume."""
+        experience = []
+        
+        patterns = [
+            r'([A-Za-z\s]+)\s*\|\s*([A-Za-z\s&.,]+?)\s*\|\s*([\d\-\s/]+)',
+            r'([A-Za-z\s]+)\s+at\s+([A-Za-z\s&.,]+?)\s*\(?([\d\-\s/]+)\)?',
+            r'([A-Za-z\s]+)\s*-\s*([A-Za-z\s&.,]+?)\s*-\s*([\d\-\s/]+)',
+        ]
+        
+        for pattern in patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            for match in matches:
+                job_title = match[0].strip()
+                company = match[1].strip()
+                dates = match[2].strip()
+                
+                if len(job_title) > 3 and len(company) > 3:
+                    exp = f"{job_title} at {company} ({dates})"
+                    if exp not in experience:
+                        experience.append(exp)
+        
+        return experience[:3]
+
     def extract_all(self, text):
         """Extract entities - WORKS ON ANY RESUME FORMAT."""
 
@@ -323,6 +348,9 @@ class ResumeNER:
         # ===== YEARS: REGEX (works ANY format) =====
         years = self.extract_years(text)
 
+        # ===== EXPERIENCE: PATTERN MATCHING =====
+        experience = self.extract_experience(text)
+
         return {
             'names': names,
             'emails': emails,
@@ -330,5 +358,6 @@ class ResumeNER:
             'companies': companies,
             'locations': locations,
             'skills': skills,
-            'years': years
+            'years': years,
+            'experience': experience
         }
