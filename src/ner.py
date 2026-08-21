@@ -98,7 +98,7 @@ class ResumeNER:
 
         # Find EXPERIENCE section
         experience_match = re.search(
-            r'(?:EXPERIENCE|WORK EXPERIENCE|PROFESSIONAL EXPERIENCE)'
+            r'(?:PROFESSIONAL\s+EXPERIENCE|EXPERIENCE|WORK EXPERIENCE)'
             r'(.*?)(?=\n(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|LANGUAGES)\b|\Z)',
             text,
             re.IGNORECASE | re.DOTALL
@@ -109,20 +109,26 @@ class ResumeNER:
 
         experience_text = experience_match.group(1)
 
-        # Common format:
-        # Job Title - Company
-        # Job Title — Company
-        # Job Title | Company
+        # Pattern: Title | Company, Location | Dates
+        # Extract JUST the company name (before comma)
         pattern = re.compile(
-            r'(?:intern|internship|analyst|developer|engineer|manager|associate|'
-            r'consultant|specialist|executive|designer|scientist)'
-            r'[^|\n–—-]{0,60}'
-            r'(?:\||–|—|-)\s*'
-            r'([A-Z][A-Za-z0-9&., ]{1,50})',
+            r'\|\s*([A-Z][A-Za-z0-9&.\s]+?)(?:,|\s\|)',  # Company name between pipes
             re.IGNORECASE
         )
 
         matches = pattern.findall(experience_text)
+        
+        for company in matches:
+            company = company.strip()
+            # Remove location if attached
+            if ',' in company:
+                company = company.split(',')[0].strip()
+            # Skip short/invalid names
+            if len(company) > 2 and not any(x in company.lower() for x in ['to', 'at', 'in', 'of']):
+                if company not in companies:
+                    companies.append(company)
+        
+        return companies
 
         for company in matches:
 
@@ -246,65 +252,62 @@ class ResumeNER:
     # ==================== EXTRACT ALL ====================
     # ==================== EXPERIENCE ====================
     def extract_experience(self, text):
-        """Extract work experience from resume - multiple format support."""
+        """Extract work experience - handles PROFESSIONAL EXPERIENCE section."""
         import re
         
         experience = []
         
-        # Find the PROFESSIONAL EXPERIENCE section
+        # Find PROFESSIONAL EXPERIENCE or similar section
         experience_match = re.search(
-            r'(?:PROFESSIONAL\s+EXPERIENCE|WORK\s+EXPERIENCE|EXPERIENCE|EMPLOYMENT\s+HISTORY)'
-            r'(.*?)(?=\n(?:EDUCATION|PROJECTS|CERTIFICATIONS|SKILLS|LANGUAGES|ACADEMIC|PROFESSIONAL\s+CERTIFICATION|CORE\s+COMPETENCIES|TECHNICAL\s+SKILLS)\b|\Z)',
+            r'(?:PROFESSIONAL\s+EXPERIENCE|WORK\s+EXPERIENCE|EMPLOYMENT\s+HISTORY)',
             text, 
-            re.IGNORECASE | re.DOTALL
+            re.IGNORECASE
         )
         
         if not experience_match:
             return experience
         
-        experience_text = experience_match.group(1)
+        # Get text from section start to next major section
+        start_pos = experience_match.start()
         
-        # Pattern 1: Job Title | Company | Dates
-        pattern1 = r'([A-Za-z\s]+?)\s*\|\s*([A-Za-z\s&.,]+?)\s*\|\s*([\w\s\-–—/]+?)(?=\n|$)'
+        # Find next section (EDUCATION, SKILLS, etc)
+        next_section = re.search(
+            r'\n(?:EDUCATION|SKILLS|PROJECTS|CERTIFICATIONS|LANGUAGES|CORE\s+COMPETENCIES|ACADEMIC|TECHNICAL)\b',
+            text[start_pos:],
+            re.IGNORECASE
+        )
         
-        # Pattern 2: **Bold** - Company - Dates  
-        pattern2 = r'\*\*?([A-Za-z\s]+?)\*\*?\s+-\s+([A-Za-z\s&.,]+?)\s+-\s+([\w\s\-–—/]+?)(?=\n|$)'
+        if next_section:
+            experience_text = text[start_pos:start_pos + next_section.start()]
+        else:
+            experience_text = text[start_pos:]
         
-        # Pattern 3: Bold Title at start, Company with special chars, dates at end
-        pattern3 = r'^([A-Za-z\s]+?)\s+\|\s+([A-Za-z\s&.,]+?)\s+\|\s+([\w\s\-–—/]+)$'
+        # Pattern: Job Title | Company, Location | Date Range
+        # This matches: "Senior Data Scientist | TechCorp Solutions, Mumbai | January 2022 - Present"
+        pattern = r'^([A-Za-z\s]+?)\s*\|\s*([A-Za-z0-9\s&.,]+?)\s*\|\s*([A-Za-z0-9\s\-–—/,]+?)$'
         
-        # Pattern 4: Title with bold **text** - Company - Dates
-        pattern4 = r'\*\*([A-Za-z\s]+?)\*\*\s+-\s+([A-Za-z\s&.,]+?)\s+-\s+([\w\s\-–—/]+)'
-        
-        all_matches = []
-        all_matches.extend(re.findall(pattern1, experience_text, re.MULTILINE))
-        all_matches.extend(re.findall(pattern2, experience_text, re.MULTILINE))
-        all_matches.extend(re.findall(pattern3, experience_text, re.MULTILINE))
-        all_matches.extend(re.findall(pattern4, experience_text, re.MULTILINE))
-        
-        # Also try to extract lines that start with capital letter (likely job title)
-        title_pattern = r'^([A-Z][A-Za-z\s]+?)\s+(?:\||•|-|at)\s+([A-Z][A-Za-z\s&.,]+?)\s+(?:\(|–|-|From)?\s*([\w\s\-–—/]*)'
-        title_matches = re.findall(title_pattern, experience_text, re.MULTILINE)
-        all_matches.extend(title_matches)
+        matches = re.findall(pattern, experience_text, re.MULTILINE)
         
         seen = set()
-        for match in all_matches:
-            if len(match) >= 2:
-                job_title = match[0].strip()
-                company = match[1].strip()
-                dates = match[2].strip() if len(match) > 2 else ""
-                
-                # Filter out garbage
-                if len(job_title) > 4 and len(company) > 2 and len(job_title.split()) <= 6:
-                    key = f"{job_title}|{company}"
-                    if key not in seen:
-                        exp = f"{job_title} at {company}"
-                        if dates:
-                            exp += f" ({dates})"
-                        experience.append(exp)
-                        seen.add(key)
+        for match in matches:
+            job_title = match[0].strip()
+            company_full = match[1].strip()
+            dates = match[2].strip()
+            
+            # Extract just company name (remove location)
+            company = company_full.split(',')[0].strip() if ',' in company_full else company_full
+            
+            # Filter out garbage
+            if len(job_title) > 4 and len(company) > 2:
+                key = f"{job_title}|{company}"
+                if key not in seen:
+                    exp = f"{job_title} at {company}"
+                    if dates:
+                        exp += f" ({dates})"
+                    experience.append(exp)
+                    seen.add(key)
         
-        return experience[:10]  # Return TOP 10
+        return experience[:10]
 
     def extract_all(self, text):
         """Extract entities - WORKS ON ANY RESUME FORMAT."""

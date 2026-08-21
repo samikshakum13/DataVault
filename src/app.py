@@ -8,6 +8,7 @@ Purpose: Let anyone upload a resume PDF and see extracted data instantly
 import gradio as gr
 import json
 import tempfile
+import re
 import os
 import pdfplumber
 from pathlib import Path
@@ -72,6 +73,27 @@ class ResumeExtractorApp:
             for key in entities:
                 if entities[key]:
                     entities[key] = list(set(entities[key]))
+            
+            # SPECIAL: Deduplicate phones (normalize different formats)
+            if entities.get('phones'):
+                unique_phones = {}
+                for phone in entities['phones']:
+                    # Extract just digits
+                    digits = re.sub(r'\D', '', phone)
+                    # Normalize to +91 format if Indian number
+                    if len(digits) == 10:  # 10-digit without country code
+                        normalized = '+91' + digits
+                    elif len(digits) == 12 and digits.startswith('91'):  # 91 + 10 digits
+                        normalized = '+91' + digits[2:]
+                    else:
+                        normalized = '+' + digits if digits else phone
+                    
+                    # Store only if not seen
+                    if normalized not in unique_phones:
+                        unique_phones[normalized] = phone
+                
+                # Keep the cleanest format (with +91)
+                entities['phones'] = sorted(list(unique_phones.keys()))
 
             # Quality score
             quality_score = self.calculate_quality(entities)
