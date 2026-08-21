@@ -191,15 +191,37 @@ class ResumeNER:
     # ==================== SKILLS ====================
     def extract_skills(self, text):
         """Extract technical skills using keyword matching."""
-        # Common tech skills list
+        # Comprehensive tech skills list
         skills_list = [
-            'python', 'java', 'c++', 'javascript', 'sql', 'r programming',
-            'pandas', 'numpy', 'matplotlib', 'seaborn', 'scikit-learn', 'tensorflow',
-            'keras', 'pytorch', 'spark', 'hadoop', 'tableau', 'power bi', 'excel',
-            'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'git', 'linux',
-            'machine learning', 'deep learning', 'nlp', 'computer vision',
-            'data analysis', 'data science', 'data engineering', 'analytics',
-            'postgresql', 'mongodb', 'mysql', 'sqlite', 'api', 'rest', 'graphql'
+            # Programming Languages
+            'python', 'java', 'c++', 'javascript', 'sql', 'r programming', 'r', 'scala', 'go', 'rust', 'kotlin',
+            'vba', 'bash', 'shell', 'perl', 'ruby',
+            
+            # Data & ML Libraries
+            'pandas', 'numpy', 'matplotlib', 'seaborn', 'scikit-learn', 'sklearn', 'tensorflow', 'keras', 'pytorch',
+            'xgboost', 'catboost', 'lightgbm', 'spark', 'pyspark', 'hadoop',
+            
+            # Databases
+            'postgresql', 'postgres', 'mysql', 'sqlite', 'mongodb', 'cassandra', 'snowflake', 'bigquery', 'redshift',
+            'oracle', 'dynamodb', 'elasticsearch', 'redis', 'hbase',
+            
+            # BI & Visualization
+            'tableau', 'power bi', 'looker', 'qlikview', 'google data studio', 'excel', 'grafana', 'metabase',
+            
+            # Cloud & DevOps
+            'aws', 'azure', 'gcp', 'google cloud', 'docker', 'kubernetes', 'git', 'jenkins', 'terraform',
+            'airflow', 'dbt', 'ci/cd', 'gitlab', 'github', 'bitbucket',
+            
+            # ML & Data Science
+            'machine learning', 'deep learning', 'nlp', 'computer vision', 'data analysis', 'data science',
+            'data engineering', 'analytics', 'etl', 'elt', 'predictive modeling', 'statistical analysis',
+            
+            # APIs & Web
+            'api', 'rest', 'graphql', 'json', 'xml', 'http', 'websocket',
+            
+            # Other Tools
+            'jira', 'confluence', 'slack', 'salesforce', 'sap', 'linux', 'windows', 'unix',
+            'sql optimization', 'data pipeline', 'business intelligence', 'data warehouse'
         ]
 
         skills_found = []
@@ -211,7 +233,7 @@ class ResumeNER:
             if re.search(pattern, text_lower):
                 skills_found.append(skill.title())
 
-        return list(set(skills_found))
+        return sorted(list(set(skills_found)))
 
     # ==================== YEARS/DATES ====================
     def extract_years(self, text):
@@ -231,8 +253,8 @@ class ResumeNER:
         
         # First, find the PROFESSIONAL EXPERIENCE section
         experience_match = re.search(
-            r'(?:PROFESSIONAL\s+EXPERIENCE|WORK\s+EXPERIENCE|EXPERIENCE)'
-            r'(.*?)(?=\n(?:EDUCATION|PROJECTS|CERTIFICATIONS|SKILLS|LANGUAGES)\b|\Z)',
+            r'(?:PROFESSIONAL\s+EXPERIENCE|WORK\s+EXPERIENCE|EXPERIENCE|EMPLOYMENT\s+HISTORY)'
+            r'(.*?)(?=\n(?:EDUCATION|PROJECTS|CERTIFICATIONS|SKILLS|LANGUAGES|ACADEMIC|PROFESSIONAL\s+CERTIFICATION|CORE\s+COMPETENCIES)\b|\Z)',
             text, 
             re.IGNORECASE | re.DOTALL
         )
@@ -242,12 +264,21 @@ class ResumeNER:
         
         experience_text = experience_match.group(1)
         
-        # Pattern: Job Title | Company | Dates
-        pattern = r'([A-Za-z\s]+?)\s*\|\s*([A-Za-z\s&.,]+?)\s*\|\s*([\w\s\-–—]+?)\n'
+        # Pattern 1: Job Title | Company | Dates (with pipes)
+        pattern1 = r'([A-Za-z\s]+?)\s*\|\s*([A-Za-z\s&.,]+?)\s*\|\s*([\w\s\-–—]+?)\n'
         
-        matches = re.findall(pattern, experience_text)
+        # Pattern 2: Job Title • Company • Dates (with bullets)
+        pattern2 = r'([A-Za-z\s]+?)\s*•\s*([A-Za-z\s&.,]+?)\s*•\s*([\w\s\-–—]+?)(?:\n|$)'
         
-        for match in matches:
+        # Pattern 3: **Bold Title** - Company - Dates
+        pattern3 = r'\*\*?([A-Za-z\s]+?)\*\*?\s*-\s*([A-Za-z\s&.,]+?)\s*-\s*([\w\s\-–—]+?)(?:\n|$)'
+        
+        all_matches = []
+        all_matches.extend(re.findall(pattern1, experience_text))
+        all_matches.extend(re.findall(pattern2, experience_text))
+        all_matches.extend(re.findall(pattern3, experience_text))
+        
+        for match in all_matches:
             job_title = match[0].strip()
             company = match[1].strip()
             dates = match[2].strip()
@@ -262,7 +293,7 @@ class ResumeNER:
                     if exp not in experience:
                         experience.append(exp)
         
-        return experience[:3]  # Return top 3 experiences
+        return experience[:10]  # Return TOP 10 experiences (was 3)
 
     def extract_all(self, text):
         """Extract entities - WORKS ON ANY RESUME FORMAT."""

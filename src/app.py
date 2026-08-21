@@ -138,83 +138,84 @@ class ResumeExtractorApp:
             text_color = "#7f1d1d"     # VERY DARK red text
 
         html = f"""
-        <div style="font-family: 'Poppins', sans-serif; padding: 25px; background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); border-radius: 12px;">
+        <div style="font-family: 'Poppins', sans-serif; padding: 30px; background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%); border-radius: 15px;">
             
-            <h2 style="margin: 0 0 25px; color: #2d3748; font-size: 24px; font-weight: 700;">📋 Extraction Results</h2>
+            <h2 style="margin: 0 0 28px; color: #1a202c; font-size: 28px; font-weight: 800; text-align: center;">📋 Extraction Results</h2>
             
-            <div style="margin-bottom: 25px; padding: 25px; background: linear-gradient(135deg, {quality_bg} 0%, {quality_bg}dd 100%); border-radius: 12px; border-left: 5px solid {quality_color}; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                <p style="margin: 10px 0; color: #2d3748; font-size: 14px;"><strong>📁 File:</strong> {result.get('filename', 'unknown')}</p>
-                <p style="margin: 10px 0; color: #2d3748; font-size: 14px;"><strong>📄 Pages:</strong> {result.get('pages', '?')}</p>
-                <p style="margin: 15px 0; display: flex; align-items: center; gap: 15px; font-size: 14px;">
+            <!-- Quality Score Box - VERY VIBRANT -->
+            <div style="margin-bottom: 28px; padding: 28px; background: linear-gradient(135deg, {quality_bg}ff 0%, {quality_bg}cc 100%); border-radius: 15px; border-left: 6px solid {quality_color}; box-shadow: 0 8px 25px rgba(0,0,0,0.15);">
+                <p style="margin: 12px 0; color: #1a202c; font-size: 15px;"><strong>📁 File:</strong> {result.get('filename', 'unknown')}</p>
+                <p style="margin: 12px 0; color: #1a202c; font-size: 15px;"><strong>📄 Pages:</strong> {result.get('pages', '?')}</p>
+                <p style="margin: 18px 0; display: flex; align-items: center; gap: 18px; font-size: 15px;">
                     <strong style="color: {text_color};">🎯 Quality Score:</strong> 
-                    <span style="background: {quality_color}; color: white; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+                    <span style="background: {quality_color}; color: white; padding: 14px 28px; border-radius: 30px; font-weight: 900; font-size: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);">
                         {quality:.0%}
                     </span>
                 </p>
             </div>
             
-            <h3 style="color: #2d3748; margin: 25px 0 15px; font-size: 18px; font-weight: 700;">🔍 Extracted Entities</h3>
+            <h3 style="color: #1a202c; margin: 30px 0 18px; font-size: 20px; font-weight: 800;">🔍 Extracted Entities</h3>
             
-            <!-- Names - Blue -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #3b82f6; border-radius: 8px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);">
-                <strong style="color: #1e40af; font-size: 15px;">👤 Names</strong><br>
-                <span style="color: #1e40af; font-size: 14px; font-weight: 500;">
+            <!-- Names - VIBRANT BLUE -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-left: 6px solid #0047AB; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 71, 171, 0.25);">
+                <strong style="color: #0047AB; font-size: 16px; font-weight: 700;">👤 Names</strong><br>
+                <span style="color: #003d82; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('names', [])) or '❌ No names found'}
                 </span>
             </div>
             
-            <!-- Emails - Purple -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-left: 5px solid #a855f7; border-radius: 8px; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15);">
-                <strong style="color: #6b21a8; font-size: 15px;">✉️ Emails</strong><br>
-                <span style="color: #6b21a8; font-size: 14px; font-weight: 500;">
+            <!-- Emails - VIBRANT PURPLE -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #e9d5ff 0%, #ddd6fe 100%); border-left: 6px solid #7c3aed; border-radius: 10px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);">
+                <strong style="color: #7c3aed; font-size: 16px; font-weight: 700;">✉️ Emails</strong><br>
+                <span style="color: #5b21b6; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('emails', [])) or '❌ No emails found'}
                 </span>
             </div>
             
-            <!-- Phones - Pink -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #ffe4e6 0%, #fbcfe8 100%); border-left: 5px solid #ec4899; border-radius: 8px; box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);">
-                <strong style="color: #be185d; font-size: 15px;">📞 Phones</strong><br>
-                <span style="color: #be185d; font-size: 14px; font-weight: 500;">
+            <!-- Phones - VIBRANT PINK -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 100%); border-left: 6px solid #db2777; border-radius: 10px; box-shadow: 0 4px 15px rgba(219, 39, 119, 0.25);">
+                <strong style="color: #db2777; font-size: 16px; font-weight: 700;">📞 Phones</strong><br>
+                <span style="color: #be185d; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('phones', [])) or '❌ No phones found'}
                 </span>
             </div>
             
-            <!-- Companies - Amber -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #fffbeb 0%, #fef08a 100%); border-left: 5px solid #f59e0b; border-radius: 8px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);">
-                <strong style="color: #b45309; font-size: 15px;">🏢 Companies</strong><br>
-                <span style="color: #b45309; font-size: 14px; font-weight: 500;">
+            <!-- Companies - VIBRANT ORANGE -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); border-left: 6px solid #ea580c; border-radius: 10px; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.25);">
+                <strong style="color: #ea580c; font-size: 16px; font-weight: 700;">🏢 Companies</strong><br>
+                <span style="color: #b45309; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('companies', [])) or '❌ No companies found'}
                 </span>
             </div>
             
-            <!-- Locations - Green -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #10b981; border-radius: 8px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);">
-                <strong style="color: #065f46; font-size: 15px;">📍 Locations</strong><br>
-                <span style="color: #065f46; font-size: 14px; font-weight: 500;">
+            <!-- Locations - VIBRANT GREEN -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%); border-left: 6px solid #059669; border-radius: 10px; box-shadow: 0 4px 15px rgba(5, 150, 105, 0.25);">
+                <strong style="color: #059669; font-size: 16px; font-weight: 700;">📍 Locations</strong><br>
+                <span style="color: #047857; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('locations', [])) or '❌ No locations found'}
                 </span>
             </div>
             
-            <!-- Skills - Cyan -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #ecfdf5 0%, #cffafe 100%); border-left: 5px solid #06b6d4; border-radius: 8px; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.15);">
-                <strong style="color: #0c4a6e; font-size: 15px;">⚡ Skills</strong><br>
-                <span style="color: #0c4a6e; font-size: 14px; font-weight: 500;">
+            <!-- Skills - VIBRANT TEAL -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%); border-left: 6px solid #0891b2; border-radius: 10px; box-shadow: 0 4px 15px rgba(8, 145, 178, 0.25);">
+                <strong style="color: #0891b2; font-size: 16px; font-weight: 700;">⚡ Skills</strong><br>
+                <span style="color: #0e7490; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('skills', [])) or '❌ No skills found'}
                 </span>
             </div>
             
-            <!-- Years - Indigo -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 100%); border-left: 5px solid #6366f1; border-radius: 8px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);">
-                <strong style="color: #312e81; font-size: 15px;">📅 Years</strong><br>
-                <span style="color: #312e81; font-size: 14px; font-weight: 500;">
+            <!-- Years - VIBRANT INDIGO -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #ddd6fe 0%, #c7d2fe 100%); border-left: 6px solid #4f46e5; border-radius: 10px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25);">
+                <strong style="color: #4f46e5; font-size: 16px; font-weight: 700;">📅 Years</strong><br>
+                <span style="color: #3730a3; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('years', [])) or '❌ No years found'}
                 </span>
             </div>
             
-            <!-- Experience - Orange -->
-            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-left: 5px solid #f97316; border-radius: 8px; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);">
-                <strong style="color: #92400e; font-size: 15px;">💼 Experience</strong><br>
-                <span style="color: #92400e; font-size: 14px; font-weight: 500;">
+            <!-- Experience - VIBRANT RED-ORANGE -->
+            <div style="margin-bottom: 14px; padding: 16px; background: linear-gradient(135deg, #fed7aa 0%, #fca5a5 100%); border-left: 6px solid #dc2626; border-radius: 10px; box-shadow: 0 4px 15px rgba(220, 38, 38, 0.25);">
+                <strong style="color: #dc2626; font-size: 16px; font-weight: 700;">💼 Experience</strong><br>
+                <span style="color: #991b1b; font-size: 15px; font-weight: 600;">
                     {', '.join(entities.get('experience', [])) or '❌ No experience found'}
                 </span>
             </div>
