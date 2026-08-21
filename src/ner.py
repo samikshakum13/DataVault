@@ -246,15 +246,15 @@ class ResumeNER:
     # ==================== EXTRACT ALL ====================
     # ==================== EXPERIENCE ====================
     def extract_experience(self, text):
-        """Extract work experience from resume - refined patterns."""
+        """Extract work experience from resume - multiple format support."""
         import re
         
         experience = []
         
-        # First, find the PROFESSIONAL EXPERIENCE section
+        # Find the PROFESSIONAL EXPERIENCE section
         experience_match = re.search(
             r'(?:PROFESSIONAL\s+EXPERIENCE|WORK\s+EXPERIENCE|EXPERIENCE|EMPLOYMENT\s+HISTORY)'
-            r'(.*?)(?=\n(?:EDUCATION|PROJECTS|CERTIFICATIONS|SKILLS|LANGUAGES|ACADEMIC|PROFESSIONAL\s+CERTIFICATION|CORE\s+COMPETENCIES)\b|\Z)',
+            r'(.*?)(?=\n(?:EDUCATION|PROJECTS|CERTIFICATIONS|SKILLS|LANGUAGES|ACADEMIC|PROFESSIONAL\s+CERTIFICATION|CORE\s+COMPETENCIES|TECHNICAL\s+SKILLS)\b|\Z)',
             text, 
             re.IGNORECASE | re.DOTALL
         )
@@ -264,36 +264,47 @@ class ResumeNER:
         
         experience_text = experience_match.group(1)
         
-        # Pattern 1: Job Title | Company | Dates (with pipes)
-        pattern1 = r'([A-Za-z\s]+?)\s*\|\s*([A-Za-z\s&.,]+?)\s*\|\s*([\w\s\-–—]+?)\n'
+        # Pattern 1: Job Title | Company | Dates
+        pattern1 = r'([A-Za-z\s]+?)\s*\|\s*([A-Za-z\s&.,]+?)\s*\|\s*([\w\s\-–—/]+?)(?=\n|$)'
         
-        # Pattern 2: Job Title • Company • Dates (with bullets)
-        pattern2 = r'([A-Za-z\s]+?)\s*•\s*([A-Za-z\s&.,]+?)\s*•\s*([\w\s\-–—]+?)(?:\n|$)'
+        # Pattern 2: **Bold** - Company - Dates  
+        pattern2 = r'\*\*?([A-Za-z\s]+?)\*\*?\s+-\s+([A-Za-z\s&.,]+?)\s+-\s+([\w\s\-–—/]+?)(?=\n|$)'
         
-        # Pattern 3: **Bold Title** - Company - Dates
-        pattern3 = r'\*\*?([A-Za-z\s]+?)\*\*?\s*-\s*([A-Za-z\s&.,]+?)\s*-\s*([\w\s\-–—]+?)(?:\n|$)'
+        # Pattern 3: Bold Title at start, Company with special chars, dates at end
+        pattern3 = r'^([A-Za-z\s]+?)\s+\|\s+([A-Za-z\s&.,]+?)\s+\|\s+([\w\s\-–—/]+)$'
+        
+        # Pattern 4: Title with bold **text** - Company - Dates
+        pattern4 = r'\*\*([A-Za-z\s]+?)\*\*\s+-\s+([A-Za-z\s&.,]+?)\s+-\s+([\w\s\-–—/]+)'
         
         all_matches = []
-        all_matches.extend(re.findall(pattern1, experience_text))
-        all_matches.extend(re.findall(pattern2, experience_text))
-        all_matches.extend(re.findall(pattern3, experience_text))
+        all_matches.extend(re.findall(pattern1, experience_text, re.MULTILINE))
+        all_matches.extend(re.findall(pattern2, experience_text, re.MULTILINE))
+        all_matches.extend(re.findall(pattern3, experience_text, re.MULTILINE))
+        all_matches.extend(re.findall(pattern4, experience_text, re.MULTILINE))
         
+        # Also try to extract lines that start with capital letter (likely job title)
+        title_pattern = r'^([A-Z][A-Za-z\s]+?)\s+(?:\||•|-|at)\s+([A-Z][A-Za-z\s&.,]+?)\s+(?:\(|–|-|From)?\s*([\w\s\-–—/]*)'
+        title_matches = re.findall(title_pattern, experience_text, re.MULTILINE)
+        all_matches.extend(title_matches)
+        
+        seen = set()
         for match in all_matches:
-            job_title = match[0].strip()
-            company = match[1].strip()
-            dates = match[2].strip()
-            
-            # Filter out garbage matches
-            if len(job_title) > 5 and len(company) > 3:
-                # Skip if title has too many words (likely not a title)
-                if len(job_title.split()) <= 5:
-                    exp = f"{job_title} at {company}"
-                    if dates:
-                        exp += f" ({dates})"
-                    if exp not in experience:
+            if len(match) >= 2:
+                job_title = match[0].strip()
+                company = match[1].strip()
+                dates = match[2].strip() if len(match) > 2 else ""
+                
+                # Filter out garbage
+                if len(job_title) > 4 and len(company) > 2 and len(job_title.split()) <= 6:
+                    key = f"{job_title}|{company}"
+                    if key not in seen:
+                        exp = f"{job_title} at {company}"
+                        if dates:
+                            exp += f" ({dates})"
                         experience.append(exp)
+                        seen.add(key)
         
-        return experience[:10]  # Return TOP 10 experiences (was 3)
+        return experience[:10]  # Return TOP 10
 
     def extract_all(self, text):
         """Extract entities - WORKS ON ANY RESUME FORMAT."""

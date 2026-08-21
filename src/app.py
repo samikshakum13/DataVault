@@ -45,7 +45,10 @@ class ResumeExtractorApp:
 
             # Extract text
             text_extracted = ""
+            page_count = 0
+            
             with pdfplumber.open(pdf_file) as pdf:
+                page_count = len(pdf.pages)
                 for page in pdf.pages:
                     text = page.extract_text()
                     if text:
@@ -76,6 +79,7 @@ class ResumeExtractorApp:
             result = {
                 "status": "success",
                 "filename": pdf_file.split('/')[-1] if '/' in pdf_file else pdf_file,
+                "pages": page_count,
                 "quality_score": quality_score,
                 "entities": entities
             }
