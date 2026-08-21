@@ -138,84 +138,84 @@ class ResumeExtractorApp:
             text_color = "#7f1d1d"     # VERY DARK red text
 
         html = f"""
-        <div style="font-family: sans-serif; padding: 20px; background: #f9fafb; border-radius: 8px;">
+        <div style="font-family: 'Poppins', sans-serif; padding: 25px; background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%); border-radius: 12px;">
             
-            <h2 style="margin: 0 0 20px; color: #1f2937;">📋 Extraction Results</h2>
+            <h2 style="margin: 0 0 25px; color: #2d3748; font-size: 24px; font-weight: 700;">📋 Extraction Results</h2>
             
-            <div style="margin-bottom: 20px; padding: 20px; background: {quality_bg}; border-radius: 8px; border-left: 4px solid {quality_color};">
-                <p style="margin: 8px 0; color: #1f2937;"><strong>File:</strong> {result.get('filename', 'unknown')}</p>
-                <p style="margin: 8px 0; color: #1f2937;"><strong>Pages:</strong> {result.get('pages', '?')}</p>
-                <p style="margin: 12px 0; display: flex; align-items: center; gap: 15px;">
-                    <strong style="color: {text_color};">Quality Score:</strong> 
-                    <span style="background: {quality_color}; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            <div style="margin-bottom: 25px; padding: 25px; background: linear-gradient(135deg, {quality_bg} 0%, {quality_bg}dd 100%); border-radius: 12px; border-left: 5px solid {quality_color}; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <p style="margin: 10px 0; color: #2d3748; font-size: 14px;"><strong>📁 File:</strong> {result.get('filename', 'unknown')}</p>
+                <p style="margin: 10px 0; color: #2d3748; font-size: 14px;"><strong>📄 Pages:</strong> {result.get('pages', '?')}</p>
+                <p style="margin: 15px 0; display: flex; align-items: center; gap: 15px; font-size: 14px;">
+                    <strong style="color: {text_color};">🎯 Quality Score:</strong> 
+                    <span style="background: {quality_color}; color: white; padding: 12px 24px; border-radius: 25px; font-weight: bold; font-size: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
                         {quality:.0%}
                     </span>
                 </p>
             </div>
             
-            <h3 style="color: #1f2937; margin-top: 20px; margin-bottom: 10px;">Extracted Entities</h3>
+            <h3 style="color: #2d3748; margin: 25px 0 15px; font-size: 18px; font-weight: 700;">🔍 Extracted Entities</h3>
             
-            <!-- Names -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #3b82f6; border-radius: 4px;">
-                <strong style="color: #1f2937;">👤 Names</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('names', [])) or 'No names found'}
+            <!-- Names - Blue -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-left: 5px solid #3b82f6; border-radius: 8px; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);">
+                <strong style="color: #1e40af; font-size: 15px;">👤 Names</strong><br>
+                <span style="color: #1e40af; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('names', [])) or '❌ No names found'}
                 </span>
             </div>
             
-            <!-- Emails -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #8b5cf6; border-radius: 4px;">
-                <strong style="color: #1f2937;">✉️ Emails</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('emails', [])) or 'No emails found'}
+            <!-- Emails - Purple -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); border-left: 5px solid #a855f7; border-radius: 8px; box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15);">
+                <strong style="color: #6b21a8; font-size: 15px;">✉️ Emails</strong><br>
+                <span style="color: #6b21a8; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('emails', [])) or '❌ No emails found'}
                 </span>
             </div>
             
-            <!-- Phones -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #ec4899; border-radius: 4px;">
-                <strong style="color: #1f2937;">📞 Phones</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('phones', [])) or 'No phones found'}
+            <!-- Phones - Pink -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #ffe4e6 0%, #fbcfe8 100%); border-left: 5px solid #ec4899; border-radius: 8px; box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);">
+                <strong style="color: #be185d; font-size: 15px;">📞 Phones</strong><br>
+                <span style="color: #be185d; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('phones', [])) or '❌ No phones found'}
                 </span>
             </div>
             
-            <!-- Companies -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #f59e0b; border-radius: 4px;">
-                <strong style="color: #1f2937;">🏢 Companies</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('companies', [])) or 'No companies found'}
+            <!-- Companies - Amber -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #fffbeb 0%, #fef08a 100%); border-left: 5px solid #f59e0b; border-radius: 8px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);">
+                <strong style="color: #b45309; font-size: 15px;">🏢 Companies</strong><br>
+                <span style="color: #b45309; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('companies', [])) or '❌ No companies found'}
                 </span>
             </div>
             
-            <!-- Locations -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #10b981; border-radius: 4px;">
-                <strong style="color: #1f2937;">📍 Locations</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('locations', [])) or 'No locations found'}
+            <!-- Locations - Green -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-left: 5px solid #10b981; border-radius: 8px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);">
+                <strong style="color: #065f46; font-size: 15px;">📍 Locations</strong><br>
+                <span style="color: #065f46; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('locations', [])) or '❌ No locations found'}
                 </span>
             </div>
             
-            <!-- Skills -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #06b6d4; border-radius: 4px;">
-                <strong style="color: #1f2937;">⚡ Skills</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('skills', [])) or 'No skills found'}
+            <!-- Skills - Cyan -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #ecfdf5 0%, #cffafe 100%); border-left: 5px solid #06b6d4; border-radius: 8px; box-shadow: 0 2px 8px rgba(6, 182, 212, 0.15);">
+                <strong style="color: #0c4a6e; font-size: 15px;">⚡ Skills</strong><br>
+                <span style="color: #0c4a6e; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('skills', [])) or '❌ No skills found'}
                 </span>
             </div>
             
-            <!-- Years -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #6366f1; border-radius: 4px;">
-                <strong style="color: #1f2937;">📅 Years</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('years', [])) or 'No years found'}
+            <!-- Years - Indigo -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 100%); border-left: 5px solid #6366f1; border-radius: 8px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);">
+                <strong style="color: #312e81; font-size: 15px;">📅 Years</strong><br>
+                <span style="color: #312e81; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('years', [])) or '❌ No years found'}
                 </span>
             </div>
             
-            <!-- Experience -->
-            <div style="margin-bottom: 16px; padding: 12px; background: white; border-left: 4px solid #f97316; border-radius: 4px;">
-                <strong style="color: #1f2937;">💼 Experience</strong><br>
-                <span style="color: #4b5563; font-size: 13px;">
-                    {', '.join(entities.get('experience', [])) or 'No experience found'}
+            <!-- Experience - Orange -->
+            <div style="margin-bottom: 12px; padding: 14px; background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-left: 5px solid #f97316; border-radius: 8px; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.15);">
+                <strong style="color: #92400e; font-size: 15px;">💼 Experience</strong><br>
+                <span style="color: #92400e; font-size: 14px; font-weight: 500;">
+                    {', '.join(entities.get('experience', [])) or '❌ No experience found'}
                 </span>
             </div>
             
